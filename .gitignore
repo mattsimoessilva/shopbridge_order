@@ -1,0 +1,93 @@
+# Build results
+bin/
+obj/
+out/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code settings
+.vscode/
+
+# ASP.NET Core secrets
+secrets.json
+
+# Entity Framework migrations (optional)
+Migrations/
+
+# Logs
+*.log
+
+# NuGet packages
+*.nupkg
+packages/
+.nuget/
+
+# Compiled DLLs and PDBs
+*.dll
+*.pdb
+
+# Publish output
+publish/
+wwwroot/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Rider IDE
+.idea/
+
+# OS-specific files
+Thumbs.db
+.DS_Store
+
+# Node.js (if using frontend assets)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Environment files
+.env
+.env.*
+
+# Test results
+TestResults/
+*.trx
+
+# Coverage reports
+coverage/
+*.coverage
+*.coveragexml
+
+# Others
+_ReSharper*/
+*.vspscc
+*.vssscc
+
+# Docker (optional)
+docker-compose.override.yml
+Dockerfile.*
+*.dockerignore
+
+# SQLite (optional)
+*.db
+*.sqlite
+*.sqlite3
+
+# Swagger custom files (optional)
+swagger/
+swagger.json
+swagger.yaml
+
+# Frontend build artifacts (optional)
+dist/
+build/
+*.map
+
+# IDE-specific folders (optional)
+.vs/
