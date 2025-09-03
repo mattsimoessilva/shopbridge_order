@@ -1,5 +1,5 @@
-using OrderAPI.DTOs;
-using OrderAPI.Models;
+using OrderAPI.Models.DTOs;
+using OrderAPI.Models.Entities;
 using OrderAPI.Repositories.Interfaces;
 using OrderAPI.Services.Interfaces;
 
@@ -20,23 +20,32 @@ namespace OrderAPI.Services
 
         public Order CreateOrder(OrderDTO dto)
         {
-            var productSnapshots = dto.Items.Select(item => new ProductSnapshotDTO
+            var orderItems = dto.Items.Select(item => new OrderItem
             {
+                Id = Guid.NewGuid(),
                 ProductId = item.ProductId,
-                Name = item.Name,
-                UnitPrice = item.UnitPrice,
-                Quantity = item.Quantity
+                ProductName = item.Name,
+                Quantity = item.Quantity,
+                UnitPrice = item.UnitPrice
             }).ToList();
 
-            var totalAmount = productSnapshots.Sum(p => p.UnitPrice * p.Quantity);
+            var totalAmount = orderItems.Sum(p => p.UnitPrice * p.Quantity);
 
             var order = new Order
             {
                 Id = Guid.NewGuid(),
-                CustomerName = dto.CustomerName,
-                OrderDate = DateTime.UtcNow,
-                Products = productSnapshots,
-                TotalAmount = totalAmount
+                CustomerId = dto.CustomerId,
+                CreatedAt = DateTime.UtcNow,
+                Items = orderItems,
+                Status = OrderStatus.Pending,
+                Payment = new Payment
+                {
+                    Id = Guid.NewGuid(),
+                    Method = dto.PaymentMethod,
+                    Amount = totalAmount,
+                    PaidAt = DateTime.UtcNow,
+                    IsConfirmed = false
+                }
             };
 
             _repository.Add(order);
@@ -51,20 +60,30 @@ namespace OrderAPI.Services
             if (existingOrder == null)
                 return false;
 
-            var updatedSnapshots = dto.Items.Select(item => new ProductSnapshotDTO
+            var updatedItems = dto.Items.Select(item => new OrderItem
             {
+                Id = Guid.NewGuid(),
                 ProductId = item.ProductId,
-                Name = item.Name,
-                UnitPrice = item.UnitPrice,
-                Quantity = item.Quantity
+                ProductName = item.Name,
+                Quantity = item.Quantity,
+                UnitPrice = item.UnitPrice
             }).ToList();
 
-            var updatedTotal = updatedSnapshots.Sum(p => p.UnitPrice * p.Quantity);
+            var updatedTotal = updatedItems.Sum(i => i.UnitPrice * i.Quantity);
 
-            existingOrder.CustomerName = dto.CustomerName;
-            existingOrder.OrderDate = DateTime.UtcNow;
-            existingOrder.Products = updatedSnapshots;
-            existingOrder.TotalAmount = updatedTotal;
+            existingOrder.CustomerId = dto.CustomerId;
+            existingOrder.CreatedAt = DateTime.UtcNow;
+            existingOrder.Items = updatedItems;
+            existingOrder.Status = OrderStatus.Processing;
+
+            existingOrder.Payment = new Payment
+            {
+                Id = Guid.NewGuid(),
+                Method = dto.PaymentMethod,
+                Amount = updatedTotal,
+                PaidAt = DateTime.UtcNow,
+                IsConfirmed = false
+            };
 
             return _repository.Update(existingOrder);
         }

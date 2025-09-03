@@ -1,14 +1,14 @@
-using OrderAPI.DTOs;
-using OrderAPI.Models;
+using OrderAPI.Models.DTOs;
+using OrderAPI.Models.Entities;
 
 namespace OrderAPI.Services.Interfaces
 {
     public interface IOrderService
     {
-        IEnumerable<Order> GetAllOrders();
-        Order? GetOrderById(Guid id);
-        Order CreateOrder(OrderDTO dto);
-        bool DeleteOrder(Guid id);
-        bool UpdatedOrder(OrderDTO dto);
+        public IEnumerable<Order> GetAllOrders();
+        public Order? GetOrderById(Guid id);
+        public Order CreateOrder(OrderDTO dto);
+        public bool DeleteOrder(Guid id);
+        public bool UpdatedOrder(OrderDTO dto);
     }
 }

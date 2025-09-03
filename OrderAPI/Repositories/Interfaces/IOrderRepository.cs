@@ -1,4 +1,4 @@
-using OrderAPI.Models;
+using OrderAPI.Models.Entities;
 
 namespace OrderAPI.Repositories.Interfaces
 {
@@ -9,5 +9,6 @@ namespace OrderAPI.Repositories.Interfaces
         void Add(Order order);
         bool Remove(Guid id);
         bool Update(Order order);
+
     }
 }

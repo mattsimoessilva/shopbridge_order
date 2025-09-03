@@ -1,4 +1,4 @@
-using OrderAPI.Models;
+using OrderAPI.Models.Entities;
 using OrderAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using OrderAPI.Repositories.Interfaces;
@@ -49,10 +49,9 @@ namespace OrderAPI.Repositories
             var existingOrder = _context.Orders.FirstOrDefault(o => o.Id == updatedOrder.Id);
             if (existingOrder == null) return false;
 
-            existingOrder.CustomerName = updatedOrder.CustomerName;
-            existingOrder.OrderDate = updatedOrder.OrderDate;
-            existingOrder.Products = updatedOrder.Products;
-            existingOrder.TotalAmount = updatedOrder.TotalAmount;
+            existingOrder.CustomerId = updatedOrder.CustomerId;
+            existingOrder.Items = updatedOrder.Items;
+
 
             _context.SaveChanges();
             return true;

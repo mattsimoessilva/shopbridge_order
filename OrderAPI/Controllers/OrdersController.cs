@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using OrderAPI.DTOs;
-using OrderAPI.Models;
+using OrderAPI.Models.DTOs;
+using OrderAPI.Models.Entities;
 using OrderAPI.Services.Interfaces;
 
 namespace OrderAPI.Controllers
@@ -65,6 +65,24 @@ namespace OrderAPI.Controllers
             var success = _orderService.DeleteOrder(id);
             if (!success) return NotFound();
             return NoContent();
+        }
+
+
+        /// <summary>
+        /// Updates an existing order.
+        /// </summary>
+        [HttpPut]
+        [ProducesResponseType(typeof(Order), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult Update([FromBody] OrderDTO order)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var updatedOrder = _orderService.UpdatedOrder(order);
+
+            return Ok(updatedOrder);
         }
     }
 }
