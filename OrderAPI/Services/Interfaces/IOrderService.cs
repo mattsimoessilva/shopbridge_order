@@ -5,10 +5,10 @@ namespace OrderAPI.Services.Interfaces
 {
     public interface IOrderService
     {
-        public IEnumerable<Order> GetAllOrders();
-        public Order? GetOrderById(Guid id);
-        public Order CreateOrder(OrderDTO dto);
-        public bool DeleteOrder(Guid id);
-        public bool UpdatedOrder(OrderDTO dto);
+        public Task<IEnumerable<OrderResponseDTO>> GetAllOrdersAsync();
+        public Task<OrderResponseDTO?> GetOrderByIdAsync(Guid id);
+        public Task<OrderResponseDTO> CreateOrderAsync(OrderDTO dto);
+        public Task<bool> DeleteOrderAsync(Guid id);
+        public Task<bool> UpdateOrderAsync(OrderDTO dto);
     }
 }

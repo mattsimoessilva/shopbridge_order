@@ -17,14 +17,8 @@ namespace OrderAPI.Models.Entities
         [Required]
         public Guid CustomerId { get; set; }
 
-        public Customer? Customer { get; set; }
-
         [Required]
         public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
-
-        public Payment? Payment { get; set; }
-
-        public Invoice? Invoice { get; set; }
 
         [Required]
         public OrderStatus Status { get; set; }

@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using OrderAPI.Models.DTOs;
 using OrderAPI.Models.Entities;
@@ -21,9 +22,9 @@ namespace OrderAPI.Controllers
         /// </summary>
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<Order>), StatusCodes.Status200OK)]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            var orders = _orderService.GetAllOrders();
+            var orders = await _orderService.GetAllOrdersAsync();
             return Ok(orders);
         }
 
@@ -33,9 +34,9 @@ namespace OrderAPI.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(Order), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetById(Guid id)
+        public async Task<ActionResult> GetById(Guid id)
         {
-            var order = _orderService.GetOrderById(id);
+            var order = await _orderService.GetOrderByIdAsync(id);
             if (order == null) return NotFound();
             return Ok(order);
         }
@@ -44,13 +45,14 @@ namespace OrderAPI.Controllers
         /// Creates a new order.
         /// </summary>
         [HttpPost]
-        [ProducesResponseType(typeof(Order), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(OrderResponseDTO), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult Create([FromBody] OrderDTO order)
+        public async Task<IActionResult> Create([FromBody] OrderDTO dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            var createdOrder = _orderService.CreateOrder(order);
+            var createdOrder = await _orderService.CreateOrderAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = createdOrder.Id }, createdOrder);
         }
 
@@ -60,9 +62,9 @@ namespace OrderAPI.Controllers
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult Delete(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-            var success = _orderService.DeleteOrder(id);
+            var success = await _orderService.DeleteOrderAsync(id);
             if (!success) return NotFound();
             return NoContent();
         }
@@ -75,12 +77,12 @@ namespace OrderAPI.Controllers
         [ProducesResponseType(typeof(Order), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult Update([FromBody] OrderDTO order)
+        public async Task<IActionResult> Update([FromBody] OrderDTO order)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var updatedOrder = _orderService.UpdatedOrder(order);
+            var updatedOrder = await _orderService.UpdateOrderAsync(order);
 
             return Ok(updatedOrder);
         }

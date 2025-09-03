@@ -2,6 +2,7 @@ using OrderAPI.Models.DTOs;
 using OrderAPI.Models.Entities;
 using OrderAPI.Repositories.Interfaces;
 using OrderAPI.Services.Interfaces;
+using System; // Ensure System is included for Exception base class
 
 namespace OrderAPI.Services
 {
@@ -14,49 +15,99 @@ namespace OrderAPI.Services
             _repository = repository;
         }
 
-        public IEnumerable<Order> GetAllOrders() => _repository.GetAll();
-
-        public Order? GetOrderById(Guid id) => _repository.GetById(id);
-
-        public Order CreateOrder(OrderDTO dto)
+        public async Task<IEnumerable<OrderResponseDTO>> GetAllOrdersAsync()
         {
+            var orders = await _repository.GetAllAsync();
+
+            return orders.Select(order => new OrderResponseDTO
+            {
+                Id = order.Id,
+                CreatedAt = order.CreatedAt,
+                CustomerId = order.CustomerId,
+                Status = order.Status,
+                Items = order.Items.Select(item => new OrderItemDTO
+                {
+                    ProductId = item.ProductId,
+                    ProductName = item.ProductName,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice
+                }).ToList()
+            });
+        }
+
+
+        public async Task<OrderResponseDTO?> GetOrderByIdAsync(Guid id)
+        {
+            var order = await _repository.GetByIdAsync(id);
+
+            if (order is null)
+                return null;
+
+            return new OrderResponseDTO
+            {
+                Id = order.Id,
+                CreatedAt = order.CreatedAt,
+                Items = order.Items.Select(i => new OrderItemDTO
+                {
+                    ProductId = i.ProductId,
+                    ProductName = i.ProductName,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.UnitPrice
+                }).ToList()
+            };
+        }
+
+
+        public async Task<OrderResponseDTO> CreateOrderAsync(OrderDTO dto)
+        {
+            var orderId = Guid.NewGuid();
+            
             var orderItems = dto.Items.Select(item => new OrderItem
             {
                 Id = Guid.NewGuid(),
                 ProductId = item.ProductId,
-                ProductName = item.Name,
+                ProductName = item.ProductName,
                 Quantity = item.Quantity,
-                UnitPrice = item.UnitPrice
+                UnitPrice = item.UnitPrice,
             }).ToList();
 
             var totalAmount = orderItems.Sum(p => p.UnitPrice * p.Quantity);
 
+
             var order = new Order
             {
-                Id = Guid.NewGuid(),
+                Id = orderId,
                 CustomerId = dto.CustomerId,
                 CreatedAt = DateTime.UtcNow,
                 Items = orderItems,
-                Status = OrderStatus.Pending,
-                Payment = new Payment
-                {
-                    Id = Guid.NewGuid(),
-                    Method = dto.PaymentMethod,
-                    Amount = totalAmount,
-                    PaidAt = DateTime.UtcNow,
-                    IsConfirmed = false
-                }
+                Status = OrderStatus.Pending
             };
 
-            _repository.Add(order);
-            return order;
+            await _repository.AddAsync(order);
+
+            return new OrderResponseDTO
+            {
+                Id = order.Id,
+                CreatedAt = order.CreatedAt,
+                CustomerId = order.CustomerId,
+                Status = order.Status,
+                Items = order.Items.Select(i => new OrderItemDTO
+                {
+                    ProductId = i.ProductId,
+                    ProductName = i.ProductName,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.UnitPrice
+                }).ToList()
+            };
+ 
         }
 
-        public bool DeleteOrder(Guid id) => _repository.Remove(id);
 
-        public bool UpdatedOrder(OrderDTO dto)
+        public async Task<bool> DeleteOrderAsync(Guid id) => await _repository.RemoveAsync(id);
+
+        public async Task<bool> UpdateOrderAsync(OrderDTO dto)
         {
-            var existingOrder = _repository.GetById(dto.Id);
+            var existingOrder = await _repository.GetByIdAsync(dto.Id);
             if (existingOrder == null)
                 return false;
 
@@ -64,7 +115,7 @@ namespace OrderAPI.Services
             {
                 Id = Guid.NewGuid(),
                 ProductId = item.ProductId,
-                ProductName = item.Name,
+                ProductName = item.ProductName,
                 Quantity = item.Quantity,
                 UnitPrice = item.UnitPrice
             }).ToList();
@@ -76,16 +127,8 @@ namespace OrderAPI.Services
             existingOrder.Items = updatedItems;
             existingOrder.Status = OrderStatus.Processing;
 
-            existingOrder.Payment = new Payment
-            {
-                Id = Guid.NewGuid(),
-                Method = dto.PaymentMethod,
-                Amount = updatedTotal,
-                PaidAt = DateTime.UtcNow,
-                IsConfirmed = false
-            };
-
-            return _repository.Update(existingOrder);
+            await _repository.UpdateAsync(existingOrder);
+            return true;
         }
     }
 }

@@ -12,17 +12,9 @@ namespace OrderAPI.Data
 
         public DbSet<Order> Orders => Set<Order>();
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
-        public DbSet<Customer> Customers => Set<Customer>();
-        public DbSet<Payment> Payments => Set<Payment>();
-        public DbSet<Invoice> Invoices => Set<Invoice>();
-
+    
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Order>()
-                .HasOne(o => o.Customer)
-                .WithMany(c => c.Orders)
-                .HasForeignKey(o => o.CustomerId)
-                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Order>()
                 .HasMany(o => o.Items)
@@ -31,23 +23,7 @@ namespace OrderAPI.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Order>()
-                .HasOne(o => o.Payment)
-                .WithOne(p => p.Order)
-                .HasForeignKey<Payment>(p => p.OrderId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Order>()
-                .HasOne(o => o.Invoice)
-                .WithOne(i => i.Order)
-                .HasForeignKey<Invoice>(i => i.OrderId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Order>()
                 .Property(o => o.Status)
-                .HasConversion<string>();
-
-            modelBuilder.Entity<Payment>()
-                .Property(p => p.Method)
                 .HasConversion<string>();
         }
     }
