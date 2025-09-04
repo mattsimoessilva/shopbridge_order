@@ -31,7 +31,8 @@ namespace OrderAPI.Services
                     ProductName = item.ProductName,
                     Quantity = item.Quantity,
                     UnitPrice = item.UnitPrice
-                }).ToList()
+                }).ToList(),
+                TotalAmount = order.TotalAmount
             });
         }
 
@@ -53,12 +54,13 @@ namespace OrderAPI.Services
                     ProductName = i.ProductName,
                     Quantity = i.Quantity,
                     UnitPrice = i.UnitPrice
-                }).ToList()
+                }).ToList(),
+                TotalAmount = order.TotalAmount
             };
         }
 
 
-        public async Task<OrderResponseDTO> CreateOrderAsync(OrderDTO dto)
+        public async Task<OrderResponseDTO> CreateOrderAsync(OrderRequestDTO dto)
         {
             var orderId = Guid.NewGuid();
             
@@ -73,13 +75,13 @@ namespace OrderAPI.Services
 
             var totalAmount = orderItems.Sum(p => p.UnitPrice * p.Quantity);
 
-
             var order = new Order
             {
                 Id = orderId,
                 CustomerId = dto.CustomerId,
                 CreatedAt = DateTime.UtcNow,
                 Items = orderItems,
+                TotalAmount = totalAmount,
                 Status = OrderStatus.Pending
             };
 
@@ -97,7 +99,8 @@ namespace OrderAPI.Services
                     ProductName = i.ProductName,
                     Quantity = i.Quantity,
                     UnitPrice = i.UnitPrice
-                }).ToList()
+                }).ToList(),
+                TotalAmount = order.TotalAmount
             };
  
         }
@@ -105,7 +108,7 @@ namespace OrderAPI.Services
 
         public async Task<bool> DeleteOrderAsync(Guid id) => await _repository.RemoveAsync(id);
 
-        public async Task<bool> UpdateOrderAsync(OrderDTO dto)
+        public async Task<bool> UpdateOrderAsync(OrderRequestDTO dto)
         {
             var existingOrder = await _repository.GetByIdAsync(dto.Id);
             if (existingOrder == null)

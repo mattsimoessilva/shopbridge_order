@@ -1,11 +1,12 @@
-using OrderAPI.Data;
-using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Builder;
-using OrderAPI.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using OrderAPI.Data;
+using OrderAPI.Repositories;
 using OrderAPI.Repositories.Interfaces;
-using OrderAPI.Services.Interfaces;
 using OrderAPI.Services;
+using OrderAPI.Services.Interfaces;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+    c.EnableAnnotations();
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "ShopBridge Order Service API",

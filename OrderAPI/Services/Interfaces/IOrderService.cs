@@ -7,8 +7,8 @@ namespace OrderAPI.Services.Interfaces
     {
         public Task<IEnumerable<OrderResponseDTO>> GetAllOrdersAsync();
         public Task<OrderResponseDTO?> GetOrderByIdAsync(Guid id);
-        public Task<OrderResponseDTO> CreateOrderAsync(OrderDTO dto);
+        public Task<OrderResponseDTO> CreateOrderAsync(OrderRequestDTO dto);
         public Task<bool> DeleteOrderAsync(Guid id);
-        public Task<bool> UpdateOrderAsync(OrderDTO dto);
+        public Task<bool> UpdateOrderAsync(OrderRequestDTO dto);
     }
 }
