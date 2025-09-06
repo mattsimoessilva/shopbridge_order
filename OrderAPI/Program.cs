@@ -10,14 +10,13 @@ using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Adds EF Core with SQlite
+// Adding EF Core with SQlite
 builder.Services.AddDbContext<OrderDbContext>(options =>
     options.UseSqlite("Data Source=orders.db"));
 
-// Registers services
+// Adding services
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
-
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -35,12 +34,22 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+// Applying migrations.
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
+    db.Database.Migrate();
+}
+
+// Configuring the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+app.UseSwagger();
+app.UseSwaggerUI();
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();

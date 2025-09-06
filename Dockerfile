@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 # Copy project files and restore dependencies
@@ -12,7 +12,7 @@ WORKDIR /src/OrderAPI
 RUN dotnet publish -c Release -o /app/publish
 
 # Stage 2: Run the application using the runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 
 # Set ASP.NET Core to listen on port 80
