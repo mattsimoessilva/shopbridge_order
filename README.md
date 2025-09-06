@@ -9,14 +9,14 @@ Developed using **ASP.NET Core**, the service follows a layered architecture and
 ## Repository Structure
 
 ```
-orderapi/
+shopbridge_order/
 │
 ├── Controllers/         # API controllers handling HTTP requests
 ├── Models/              # Domain models and DTOs
 ├── Services/            # Business logic and service layer
 ├── Repositories/        # Data persistence and database access
 ├── Migrations/          # EF Core database migrations
-├── orderapi.csproj      # Project definition
+├── OrderApi.csproj      # Project definition
 └── README.md
 ```
 
