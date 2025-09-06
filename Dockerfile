@@ -11,12 +11,17 @@ COPY . .
 WORKDIR /src/OrderAPI
 RUN dotnet publish -c Release -o /app/publish
 
-# Stage 2: Run the application using a minimal runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine AS runtime
+# Stage 2: Run the application using the runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS runtime
 WORKDIR /app
+
+# Set ASP.NET Core to listen on port 80
+ENV ASPNETCORE_URLS=http://+:80
+
+# Copy published app from build stage
 COPY --from=build /app/publish .
 
-# Expose the port your API listens on
+# Expose container port
 EXPOSE 80
 
 # Start the application

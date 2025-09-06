@@ -15,6 +15,51 @@ namespace OrderAPI.Services
             _repository = repository;
         }
 
+        public async Task<OrderResponseDTO> CreateOrderAsync(OrderRequestDTO dto)
+        {
+            var orderId = Guid.NewGuid();
+
+            var orderItems = dto.Items.Select(item => new OrderItem
+            {
+                Id = Guid.NewGuid(),
+                ProductId = item.ProductId,
+                ProductName = item.ProductName,
+                Quantity = item.Quantity,
+                UnitPrice = item.UnitPrice,
+            }).ToList();
+
+            var totalAmount = orderItems.Sum(p => p.UnitPrice * p.Quantity);
+
+            var order = new Order
+            {
+                Id = orderId,
+                CustomerId = dto.CustomerId,
+                CreatedAt = DateTime.UtcNow,
+                Items = orderItems,
+                TotalAmount = totalAmount,
+                Status = OrderStatus.Pending
+            };
+
+            await _repository.AddAsync(order);
+
+            return new OrderResponseDTO
+            {
+                Id = order.Id,
+                CreatedAt = order.CreatedAt,
+                CustomerId = order.CustomerId,
+                Status = order.Status,
+                Items = order.Items.Select(i => new OrderItemDTO
+                {
+                    ProductId = i.ProductId,
+                    ProductName = i.ProductName,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.UnitPrice
+                }).ToList(),
+                TotalAmount = order.TotalAmount
+            };
+
+        }
+
         public async Task<IEnumerable<OrderResponseDTO>> GetAllOrdersAsync()
         {
             var orders = await _repository.GetAllAsync();
@@ -59,55 +104,6 @@ namespace OrderAPI.Services
             };
         }
 
-
-        public async Task<OrderResponseDTO> CreateOrderAsync(OrderRequestDTO dto)
-        {
-            var orderId = Guid.NewGuid();
-            
-            var orderItems = dto.Items.Select(item => new OrderItem
-            {
-                Id = Guid.NewGuid(),
-                ProductId = item.ProductId,
-                ProductName = item.ProductName,
-                Quantity = item.Quantity,
-                UnitPrice = item.UnitPrice,
-            }).ToList();
-
-            var totalAmount = orderItems.Sum(p => p.UnitPrice * p.Quantity);
-
-            var order = new Order
-            {
-                Id = orderId,
-                CustomerId = dto.CustomerId,
-                CreatedAt = DateTime.UtcNow,
-                Items = orderItems,
-                TotalAmount = totalAmount,
-                Status = OrderStatus.Pending
-            };
-
-            await _repository.AddAsync(order);
-
-            return new OrderResponseDTO
-            {
-                Id = order.Id,
-                CreatedAt = order.CreatedAt,
-                CustomerId = order.CustomerId,
-                Status = order.Status,
-                Items = order.Items.Select(i => new OrderItemDTO
-                {
-                    ProductId = i.ProductId,
-                    ProductName = i.ProductName,
-                    Quantity = i.Quantity,
-                    UnitPrice = i.UnitPrice
-                }).ToList(),
-                TotalAmount = order.TotalAmount
-            };
- 
-        }
-
-
-        public async Task<bool> DeleteOrderAsync(Guid id) => await _repository.RemoveAsync(id);
-
         public async Task<bool> UpdateOrderAsync(OrderRequestDTO dto)
         {
             var existingOrder = await _repository.GetByIdAsync(dto.Id);
@@ -133,5 +129,8 @@ namespace OrderAPI.Services
             await _repository.UpdateAsync(existingOrder);
             return true;
         }
+
+        public async Task<bool> DeleteOrderAsync(Guid id) => await _repository.RemoveAsync(id);
+
     }
 }
