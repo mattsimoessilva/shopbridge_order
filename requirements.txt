@@ -1,2 +1,13 @@
+# Web framework
 flask
 flask-classful
+
+# Database ORM
+sqlalchemy>=2.0
+
+# Async DB driver for SQLite
+aiosqlite
+
+# Type checking & linting (optional but recommended)
+mypy
+flake8

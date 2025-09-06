@@ -1,0 +1,73 @@
+# -------------------------
+# Python
+# -------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env/
+.venv/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+
+# -------------------------
+# SQLite database
+# -------------------------
+*.db
+*.sqlite3
+
+# -------------------------
+# Environment variables
+# -------------------------
+.env
+.env.*
+
+# -------------------------
+# IDE / Editor settings
+# -------------------------
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# -------------------------
+# OS-specific files
+# -------------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# -------------------------
+# Logs
+# -------------------------
+*.log
+logs/
