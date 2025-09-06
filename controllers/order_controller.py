@@ -1,17 +1,18 @@
 from flask import request, jsonify, url_for, Response
 from flask_classful import FlaskView, route
-from Models.DTOs.OrderRequestDTO import OrderRequestDTO
-from Models.DTOs.OrderResponseDTO import OrderResponseDTO
-from services.order_service_interface import IOrderService
+
+from models.dtos.order_request_dto import OrderRequestDTO
+from models.dtos.order_response_dto import OrderResponseDTO
+from services.order_service_interface import OrderServiceInterface
 
 
 class OrdersController(FlaskView):
-    route_base = "/api/Orders/"
+    route_base = "/api/orders/"
 
-    def __init__(self, order_service: IOrderService):
+    def __init__(self, order_service: OrderServiceInterface):
         self._order_service = order_service
 
-    # POST: Create Order
+    # POST: Create order
     @route("", methods=["POST"])
     async def create(self):
         data = request.get_json()
@@ -22,7 +23,7 @@ class OrdersController(FlaskView):
 
         return jsonify(created_order.__dict__), 201, {"Location": location}
 
-    # GET: All Orders
+    # GET: All orders
     @route("", methods=["GET"])
     async def get_all(self):
         orders = await self._order_service.get_all_orders_async()
@@ -36,7 +37,7 @@ class OrdersController(FlaskView):
             return Response(status=404)
         return jsonify(order.__dict__), 200
 
-    # PUT: Update Order
+    # PUT: Update order
     @route("", methods=["PUT"])
     async def update(self):
         data = request.get_json()
@@ -44,7 +45,7 @@ class OrdersController(FlaskView):
         updated_order = await self._order_service.update_order_async(order_request)
         return jsonify(updated_order.__dict__), 200
 
-    # DELETE: Remove Order
+    # DELETE: Remove order
     @route("<string:order_id>", methods=["DELETE"])
     async def delete(self, order_id: str):
         success = await self._order_service.delete_order_async(order_id)
