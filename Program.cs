@@ -28,7 +28,13 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "ShopBridge Order Service API",
-        Version = "v1"
+        Version = "v1",
+        Description = "An ASP.NET Core Web API for managing orders in the ShopBridge system.",
+        Contact = new OpenApiContact
+        {
+            Name = "Matheus Simões",
+            Email = "matheussimoesdasilva@outlook.com"
+        }
     });
 });
 
