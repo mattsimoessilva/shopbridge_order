@@ -2,39 +2,34 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
-from models.dtos.order_request_dto import OrderRequestDTO
-from models.dtos.order_response_dto import OrderResponseDTO
-from models.dtos.order_item_dto import OrderItemDTO
 from models.entities.order import Order
 from models.entities.order_item import OrderItem
-from models.entities.order_status import OrderStatus
-from services.order_service_interface import OrderServiceInterface
-from repositories.order_repository_interface import OrderRepositoryInterface
-
+from models.enums.order_status import OrderStatus
+from repositories.interfaces.order_repository_interface import OrderRepositoryInterface
+from services.interfaces.order_service_interface import OrderServiceInterface
 
 class OrderService(OrderServiceInterface):
     def __init__(self, repository: OrderRepositoryInterface):
         self._repository = repository
 
-    async def create_order_async(self, dto: OrderRequestDTO) -> OrderResponseDTO:
+    async def create_order_async(self, order_data: dict) -> dict:
         order_id = uuid.uuid4()
 
         order_items = [
             OrderItem(
                 id=uuid.uuid4(),
-                product_id=item.product_id,
-                product_name=item.product_name,
-                quantity=item.quantity,
-                unit_price=item.unit_price
+                product_id=item["product_id"],
+                quantity=item["quantity"],
+                unit_price=item.get("unit_price", 0.0)
             )
-            for item in dto.items
+            for item in order_data["items"]
         ]
 
-        total_amount = sum(p.unit_price * p.quantity for p in order_items)
+        total_amount = sum(item.unit_price * item.quantity for item in order_items)
 
         order = Order(
             id=order_id,
-            customer_id=dto.customer_id,
+            customer_id=order_data["customer_id"],
             created_at=datetime.utcnow(),
             items=order_items,
             total_amount=total_amount,
@@ -43,94 +38,105 @@ class OrderService(OrderServiceInterface):
 
         await self._repository.add_async(order)
 
-        return OrderResponseDTO(
-            id=order.id,
-            created_at=order.created_at,
-            customer_id=order.customer_id,
-            status=order.status,
-            items=[
-                OrderItemDTO(
-                    product_id=i.product_id,
-                    product_name=i.product_name,
-                    quantity=i.quantity,
-                    unit_price=i.unit_price
-                )
-                for i in order.items
+        return {
+            "id": order.id,
+            "created_at": order.created_at,
+            "customer_id": order.customer_id,
+            "status": order.status.value,
+            "items": [
+                {
+                    "product_id": item.product_id,
+                    "quantity": item.quantity,
+                    "unit_price": item.unit_price
+                }
+                for item in order.items
             ],
-            total_amount=order.total_amount
-        )
+            "total_amount": order.total_amount
+        }
 
-    async def get_all_orders_async(self) -> List[OrderResponseDTO]:
+    async def get_all_orders_async(self) -> List[dict]:
         orders = await self._repository.get_all_async()
 
         return [
-            OrderResponseDTO(
-                id=order.id,
-                created_at=order.created_at,
-                customer_id=order.customer_id,
-                status=order.status,
-                items=[
-                    OrderItemDTO(
-                        product_id=item.product_id,
-                        product_name=item.product_name,
-                        quantity=item.quantity,
-                        unit_price=item.unit_price
-                    )
+            {
+                "id": order.id,
+                "created_at": order.created_at,
+                "customer_id": order.customer_id,
+                "status": order.status.value,
+                "items": [
+                    {
+                        "product_id": item.product_id,
+                        "quantity": item.quantity,
+                        "unit_price": item.unit_price
+                    }
                     for item in order.items
                 ],
-                total_amount=order.total_amount
-            )
+                "total_amount": order.total_amount
+            }
             for order in orders
         ]
 
-    async def get_order_by_id_async(self, order_id: UUID) -> Optional[OrderResponseDTO]:
+    async def get_order_by_id_async(self, order_id: UUID) -> Optional[dict]:
         order = await self._repository.get_by_id_async(order_id)
         if order is None:
             return None
 
-        return OrderResponseDTO(
-            id=order.id,
-            created_at=order.created_at,
-            customer_id=order.customer_id,
-            status=order.status,
-            items=[
-                OrderItemDTO(
-                    product_id=i.product_id,
-                    product_name=i.product_name,
-                    quantity=i.quantity,
-                    unit_price=i.unit_price
-                )
-                for i in order.items
+        return {
+            "id": order.id,
+            "created_at": order.created_at,
+            "customer_id": order.customer_id,
+            "status": order.status.value,
+            "items": [
+                {
+                    "product_id": item.product_id,
+                    "quantity": item.quantity,
+                    "unit_price": item.unit_price
+                }
+                for item in order.items
             ],
-            total_amount=order.total_amount
-        )
+            "total_amount": order.total_amount
+        }
 
-    async def update_order_async(self, dto: OrderRequestDTO) -> bool:
-        existing_order = await self._repository.get_by_id_async(dto.id)
+    async def update_order_async(self, order_data: dict) -> dict:
+        existing_order = await self._repository.get_by_id_async(order_data["id"])
         if existing_order is None:
-            return False
+            return None
 
         updated_items = [
             OrderItem(
                 id=uuid.uuid4(),
-                product_id=item.product_id,
-                product_name=item.product_name,
-                quantity=item.quantity,
-                unit_price=item.unit_price
+                product_id=item["product_id"],
+                quantity=item["quantity"],
+                unit_price=item.get("unit_price", 0.0)
             )
-            for item in dto.items
+            for item in order_data["items"]
         ]
 
-        updated_total = sum(i.unit_price * i.quantity for i in updated_items)
+        updated_total = sum(item.unit_price * item.quantity for item in updated_items)
 
-        existing_order.customer_id = dto.customer_id
+        existing_order.customer_id = order_data["customer_id"]
         existing_order.created_at = datetime.utcnow()
         existing_order.items = updated_items
         existing_order.total_amount = updated_total
         existing_order.status = OrderStatus.PROCESSING
 
         await self._repository.update_async(existing_order)
-        return True
+
+        return {
+            "id": existing_order.id,
+            "created_at": existing_order.created_at,
+            "customer_id": existing_order.customer_id,
+            "status": existing_order.status.value,
+            "items": [
+                {
+                    "product_id": item.product_id,
+                    "quantity": item.quantity,
+                    "unit_price": item.unit_price
+                }
+                for item in existing_order.items
+            ],
+            "total_amount": existing_order.total_amount
+        }
 
     async def delete_order_async(self, order_id: UUID) -> bool:
         return await self._repository.remove_async(order_id)

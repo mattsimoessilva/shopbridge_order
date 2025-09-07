@@ -1,3 +1,3 @@
-from .orders_controller import OrdersController
+from .order_controller import OrderController
 
-__all__ = ["OrdersController"]
+__all__ = ["OrderController"]

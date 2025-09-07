@@ -5,7 +5,7 @@ from sqlalchemy import DateTime, ForeignKey, Numeric, Enum
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from models.entities.base import Base
-from models.entities.order_status import OrderStatus
+from models.enums import OrderStatus
 
 
 class Order(Base):

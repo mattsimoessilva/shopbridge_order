@@ -32,6 +32,12 @@ htmlcov/
 *.sqlite3
 
 # -------------------------
+# Alembic migrations
+# -------------------------
+migrations/
+alembic.ini
+
+# -------------------------
 # Environment variables
 # -------------------------
 .env

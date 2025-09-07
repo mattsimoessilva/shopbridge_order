@@ -5,7 +5,7 @@ from sqlalchemy import select, update as sql_update, delete as sql_delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session, selectinload
 from models.entities.order import Order
-from repositories.order_repository_interface import OrderRepositoryInterface
+from repositories.interfaces.order_repository_interface import OrderRepositoryInterface
 
 
 class OrderRepository(OrderRepositoryInterface):
