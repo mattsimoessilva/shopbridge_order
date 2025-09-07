@@ -15,6 +15,7 @@ class OrderService(OrderServiceInterface):
     def create_order(self, order_data: dict) -> dict:
         order_id = uuid.uuid4()
 
+        items_data = order_data.get("items", [])
         order_items = [
             OrderItem(
                 id=uuid.uuid4(),
@@ -22,14 +23,15 @@ class OrderService(OrderServiceInterface):
                 quantity=item["quantity"],
                 unit_price=item.get("unit_price", 0.0)
             )
-            for item in order_data["items"]
+            for item in items_data
         ]
+
 
         total_amount = sum(item.unit_price * item.quantity for item in order_items)
 
         order = Order(
             id=order_id,
-            customer_id=order_data["customer_id"],
+            customer_id = order_data.get("customer_id"),
             created_at=datetime.utcnow(),
             items=order_items,
             total_amount=total_amount,
@@ -102,29 +104,36 @@ class OrderService(OrderServiceInterface):
         if existing_order is None:
             return None
 
-        updated_items = [
-            OrderItem(
-                id=uuid.uuid4(),
-                product_id=item["product_id"],
-                quantity=item["quantity"],
-                unit_price=item.get("unit_price", 0.0)
-            )
-            for item in order_data["items"]
-        ]
+        if "status" in order_data:
+            existing_order.status = OrderStatus(order_data["status"])
 
-        updated_total = sum(item.unit_price * item.quantity for item in updated_items)
+        items_data = order_data.get("items")
+        if items_data:
+            updated_items = [
+                OrderItem(
+                    id=uuid.uuid4(),
+                    product_id=item["product_id"],
+                    quantity=item["quantity"],
+                    unit_price=item.get("unit_price", 0.0)
+                )
+                for item in items_data
+            ]
+            existing_order.items = updated_items
+            existing_order.total_amount = sum(item.unit_price * item.quantity for item in updated_items)
 
-        existing_order.customer_id = order_data["customer_id"]
-        existing_order.created_at = datetime.utcnow()
-        existing_order.items = updated_items
-        existing_order.total_amount = updated_total
-        existing_order.status = OrderStatus.PROCESSING
+        # Update deleted_at if provided
+        if "deleted_at" in order_data:
+            existing_order.deleted_at = order_data["deleted_at"]
 
-        self._repository.update_async(existing_order)
+        # Never update customer_id or created_at
+        existing_order.updated_at = datetime.utcnow()
+
+        self._repository.update(existing_order)
 
         return {
             "id": existing_order.id,
             "created_at": existing_order.created_at,
+            "updated_at": existing_order.updated_at,
             "customer_id": existing_order.customer_id,
             "status": existing_order.status.value,
             "items": [

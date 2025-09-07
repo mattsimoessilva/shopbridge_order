@@ -1,8 +1,8 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from uuid import UUID
-from models.schemas.order_request_schema import OrderRequestSchema
-from models.schemas.order_response_schema import OrderResponseSchema
+from models.schemas.order_create_schema import OrderCreateSchema
+from models.schemas.order_update_schema import OrderUpdateSchema
 from services.interfaces.order_service_interface import OrderServiceInterface
 from flask_smorest import Blueprint, abort
 
@@ -30,14 +30,13 @@ class OrderController:
 
     def update_order(self, order_data, order_id: UUID):
         order_data["id"] = order_id
-        return  self.order_service.update_order_(order_data)
+        return  self.order_service.update_order(order_data)
 
     def delete_order(self, order_id: UUID):
         success =  self.order_service.delete_order(order_id)
         if not success:
             abort(404, message="Order not found")
 
-    # --- Registro das rotas ---
     @classmethod
     def register(cls, blp: Blueprint):
         controller = cls()
@@ -46,16 +45,16 @@ class OrderController:
             "/", view_func=controller.list_orders, methods=["GET"]
         )
         blp.add_url_rule(
-            "/", view_func=blp.arguments(OrderRequestSchema)(
-                blp.response(201, OrderResponseSchema)(controller.create_order)
+            "/", view_func=blp.arguments(OrderCreateSchema)(
+                blp.response(201, OrderCreateSchema)(controller.create_order)
             ), methods=["POST"]
         )
         blp.add_url_rule(
             "/<uuid:order_id>", view_func=controller.get_order, methods=["GET"]
         )
         blp.add_url_rule(
-            "/<uuid:order_id>", view_func=blp.arguments(OrderRequestSchema)(
-                blp.response(200, OrderResponseSchema)(controller.update_order)
+            "/<uuid:order_id>", view_func=blp.arguments(OrderUpdateSchema)(
+                blp.response(200, OrderUpdateSchema)(controller.update_order)
             ), methods=["PUT"]
         )
         blp.add_url_rule(
