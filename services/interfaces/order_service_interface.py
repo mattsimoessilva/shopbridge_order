@@ -6,26 +6,21 @@ from uuid import UUID
 class OrderServiceInterface(ABC):
 
     @abstractmethod
-    async def get_all_orders_async(self) -> List[dict]:
-        """Returns a list of orders matching OrderResponseSchema"""
+    def get_all_orders(self) -> List[dict]:
         pass
 
     @abstractmethod
-    async def get_order_by_id_async(self, order_id: UUID) -> Optional[dict]:
-        """Returns a single order matching OrderResponseSchema"""
+    def get_order_by_id(self, order_id: UUID) -> Optional[dict]:
         pass
 
     @abstractmethod
-    async def create_order_async(self, order_data: dict) -> dict:
-        """Accepts validated data matching OrderRequestSchema and returns OrderResponseSchema"""
+    def create_order(self, order_data: dict) -> dict:
         pass
 
     @abstractmethod
-    async def delete_order_async(self, order_id: UUID) -> bool:
-        """Deletes an order by ID"""
+    def delete_order(self, order_id: UUID) -> bool:
         pass
 
     @abstractmethod
-    async def update_order_async(self, order_data: dict) -> dict:
-        """Accepts validated data matching OrderRequestSchema and returns updated OrderResponseSchema"""
+    def update_order(self, order_data: dict) -> dict:
         pass

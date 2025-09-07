@@ -1,10 +1,11 @@
 from flask.views import MethodView
-from flask_smorest import Blueprint
+from flask_smorest import Blueprint, abort
 from uuid import UUID
 from models.schemas.order_request_schema import OrderRequestSchema
 from models.schemas.order_response_schema import OrderResponseSchema
 from services.interfaces.order_service_interface import OrderServiceInterface
-from flask_smorest import Blueprint
+from flask_smorest import Blueprint, abort
+
 
 blp = Blueprint(
     "orders", "orders",
@@ -15,26 +16,26 @@ blp = Blueprint(
 class OrderController:
     order_service: OrderServiceInterface = None
 
-    async def list_orders(self):
-        return await self.order_service.get_all_orders_async()
+    def list_orders(self):
+        return  self.order_service.get_all_orders()
 
-    async def create_order(self, order_data):
-        return await self.order_service.create_order_async(order_data)
+    def create_order(self, order_data):
+        return  self.order_service.create_order(order_data)
 
-    async def get_order(self, order_id: UUID):
-        order = await self.order_service.get_order_by_id_async(order_id)
+    def get_order(self, order_id: UUID):
+        order =  self.order_service.get_order_by_id(order_id)
         if not order:
-            blp.abort(404, message="Order not found")
+            abort(404, message="Order not found")
         return order
 
-    async def update_order(self, order_data, order_id: UUID):
+    def update_order(self, order_data, order_id: UUID):
         order_data["id"] = order_id
-        return await self.order_service.update_order_async(order_data)
+        return  self.order_service.update_order_(order_data)
 
-    async def delete_order(self, order_id: UUID):
-        success = await self.order_service.delete_order_async(order_id)
+    def delete_order(self, order_id: UUID):
+        success =  self.order_service.delete_order(order_id)
         if not success:
-            blp.abort(404, message="Order not found")
+            abort(404, message="Order not found")
 
     # --- Registro das rotas ---
     @classmethod

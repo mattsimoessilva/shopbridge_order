@@ -9,53 +9,52 @@ from repositories.interfaces.order_repository_interface import OrderRepositoryIn
 
 
 class OrderRepository(OrderRepositoryInterface):
-    def __init__(self, async_session: AsyncSession, sync_session: Session):
-        self._async_session = async_session
+    def __init__(self, sync_session: Session):
         self._sync_session = sync_session
 
-    async def get_all_async(self) -> List[Order]:
+    def get_all(self) -> List[Order]:
         stmt = (
             select(Order)
             .where(Order.deleted_at.is_(None))
             .options(selectinload(Order.items))
         )
 
-        result = await self._async_session.execute(stmt)
+        result = self._sync_session.execute(stmt)
 
         return result.scalars().all()
 
-    async def get_by_id_async(self, order_id: UUID) -> Optional[Order]:
+    def get_by_id(self, order_id: UUID) -> Optional[Order]:
         stmt = (
             select(Order)
             .where(Order.id == order_id)
             .options(selectinload(Order.items))
         )
 
-        result = await self._async_session.execute(stmt)
+        result = self._sync_session.execute(stmt)
 
         return result.scalars().first()
 
-    async def add_async(self, order: Order) -> None:
-        self._async_session.add(order)
+    def add(self, order: Order) -> None:
+        self._sync_session.add(order)
 
-        await self._async_session.commit()
+        self._sync_session.commit()
 
-    async def remove_async(self, order_id: UUID) -> bool:
+    def remove(self, order_id: UUID) -> bool:
         stmt = select(Order).where(Order.id == order_id)
-        result = await self._async_session.execute(stmt)
+        result = self._sync_session.execute(stmt)
         order = result.scalars().first()
 
         if order is None:
             return False
 
-        await self._async_session.delete(order)
-        await self._async_session.commit()
+        self._sync_session.delete(order)
+        self._sync_session.commit()
 
         return True
 
-    async def update_async(self, updated_order: Order) -> bool:
+    def update(self, updated_order: Order) -> bool:
         stmt = select(Order).where(Order.id == updated_order.id)
-        result = await self._async_session.execute(stmt)
+        result = self._sync_session.execute(stmt)
         existing_order = result.scalars().first()
 
         if existing_order is None:
@@ -64,7 +63,7 @@ class OrderRepository(OrderRepositoryInterface):
         existing_order.customer_id = updated_order.customer_id
         existing_order.items = updated_order.items
 
-        await self._async_session.commit()
+        self._sync_session.commit()
 
         return True
 

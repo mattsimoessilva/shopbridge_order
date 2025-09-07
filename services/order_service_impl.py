@@ -12,7 +12,7 @@ class OrderService(OrderServiceInterface):
     def __init__(self, repository: OrderRepositoryInterface):
         self._repository = repository
 
-    async def create_order_async(self, order_data: dict) -> dict:
+    def create_order(self, order_data: dict) -> dict:
         order_id = uuid.uuid4()
 
         order_items = [
@@ -36,7 +36,7 @@ class OrderService(OrderServiceInterface):
             status=OrderStatus.PENDING
         )
 
-        await self._repository.add_async(order)
+        self._repository.add(order)
 
         return {
             "id": order.id,
@@ -54,8 +54,8 @@ class OrderService(OrderServiceInterface):
             "total_amount": order.total_amount
         }
 
-    async def get_all_orders_async(self) -> List[dict]:
-        orders = await self._repository.get_all_async()
+    def get_all_orders(self) -> List[dict]:
+        orders = self._repository.get_all()
 
         return [
             {
@@ -76,8 +76,8 @@ class OrderService(OrderServiceInterface):
             for order in orders
         ]
 
-    async def get_order_by_id_async(self, order_id: UUID) -> Optional[dict]:
-        order = await self._repository.get_by_id_async(order_id)
+    def get_order_by_id(self, order_id: UUID) -> Optional[dict]:
+        order = self._repository.get_by_id(order_id)
         if order is None:
             return None
 
@@ -97,8 +97,8 @@ class OrderService(OrderServiceInterface):
             "total_amount": order.total_amount
         }
 
-    async def update_order_async(self, order_data: dict) -> dict:
-        existing_order = await self._repository.get_by_id_async(order_data["id"])
+    def update_order(self, order_data: dict) -> dict:
+        existing_order = self._repository.get_by_id(order_data["id"])
         if existing_order is None:
             return None
 
@@ -120,7 +120,7 @@ class OrderService(OrderServiceInterface):
         existing_order.total_amount = updated_total
         existing_order.status = OrderStatus.PROCESSING
 
-        await self._repository.update_async(existing_order)
+        self._repository.update_async(existing_order)
 
         return {
             "id": existing_order.id,
@@ -138,5 +138,5 @@ class OrderService(OrderServiceInterface):
             "total_amount": existing_order.total_amount
         }
 
-    async def delete_order_async(self, order_id: UUID) -> bool:
-        return await self._repository.remove_async(order_id)
+    def delete_order(self, order_id: UUID) -> bool:
+        return self._repository.remove(order_id)
