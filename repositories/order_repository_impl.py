@@ -1,12 +1,18 @@
+# repositories/order_repository.py
+
 from typing import List, Optional
 from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
 from models.entities.order import Order
 from repositories.interfaces.order_repository_interface import OrderRepositoryInterface
 from services.mapping.mapper_interface import MapperInterface
 
+
 class OrderRepository(OrderRepositoryInterface):
+
     def __init__(self, mapper: MapperInterface):
         self._mapper = mapper
 
@@ -17,6 +23,7 @@ class OrderRepository(OrderRepositoryInterface):
         session.add(entity)
         await session.commit()
         await session.refresh(entity)
+
         return entity
 
     async def GetAllAsync(self, session: AsyncSession) -> List[Order]:
@@ -27,7 +34,9 @@ class OrderRepository(OrderRepositoryInterface):
         if not id:
             raise ValueError("Record identifier cannot be empty.")
 
-        result = await session.execute(select(Order).where(Order.id == id))
+        result = await session.execute(
+            select(Order).where(Order.id == id)
+        )
         return result.scalars().first()
 
     async def UpdateAsync(self, updated: Order, session: AsyncSession) -> bool:
@@ -40,6 +49,7 @@ class OrderRepository(OrderRepositoryInterface):
 
         self._mapper.map(updated, existing)
         await session.commit()
+
         return True
 
     async def DeleteAsync(self, id: UUID, session: AsyncSession) -> bool:
@@ -52,4 +62,5 @@ class OrderRepository(OrderRepositoryInterface):
 
         await session.delete(existing)
         await session.commit()
+
         return True

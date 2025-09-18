@@ -1,18 +1,23 @@
 # controllers/address_controller.py
+
 from uuid import UUID
 from flask import Blueprint, request, jsonify, current_app
 from http import HTTPStatus
 from marshmallow import ValidationError
+
 from models.schemas.address.address_create_schema import AddressCreateSchema
 from models.schemas.address.address_update_schema import AddressUpdateSchema
 from models.dtos.address.address_create_dto import AddressCreateDTO
 from models.dtos.address.address_update_dto import AddressUpdateDTO
 
+
 blp = Blueprint(
-    "addresses", "addresses",
+    "addresses",
+    "addresses",
     url_prefix="/api/addresses",
     description="Operations on Addresses"
 )
+
 
 @blp.route("/", methods=["POST"])
 async def Create():
@@ -29,6 +34,7 @@ async def Create():
 
     except ValidationError as err:
         return jsonify({"errors": err.messages}), HTTPStatus.BAD_REQUEST
+
     except Exception as ex:
         return jsonify({"error": str(ex)}), HTTPStatus.INTERNAL_SERVER_ERROR
 
@@ -39,7 +45,9 @@ async def GetAll():
     try:
         service = current_app.extensions["address_service"]
         result = await service.GetAllAsync()
+
         return jsonify(result), HTTPStatus.OK
+
     except Exception as ex:
         return jsonify({"error": str(ex)}), HTTPStatus.INTERNAL_SERVER_ERROR
 
@@ -50,9 +58,12 @@ async def GetById(address_id: UUID):
     try:
         service = current_app.extensions["address_service"]
         result = await service.GetByIdAsync(address_id)
+
         if not result:
             return jsonify({"message": "Address not found"}), HTTPStatus.NOT_FOUND
+
         return jsonify(result), HTTPStatus.OK
+
     except Exception as ex:
         return jsonify({"error": str(ex)}), HTTPStatus.INTERNAL_SERVER_ERROR
 
@@ -70,10 +81,12 @@ async def Update():
 
         if not success:
             return jsonify({"message": "Address not found"}), HTTPStatus.NOT_FOUND
+
         return "", HTTPStatus.OK
 
     except ValidationError as err:
         return jsonify({"errors": err.messages}), HTTPStatus.BAD_REQUEST
+
     except Exception as ex:
         return jsonify({"error": str(ex)}), HTTPStatus.INTERNAL_SERVER_ERROR
 
@@ -84,8 +97,11 @@ async def Delete(address_id: UUID):
     try:
         service = current_app.extensions["address_service"]
         deleted = await service.DeleteAsync(address_id)
+
         if not deleted:
             return jsonify({"message": "Address not found"}), HTTPStatus.NOT_FOUND
+
         return "", HTTPStatus.NO_CONTENT
+
     except Exception as ex:
         return jsonify({"error": str(ex)}), HTTPStatus.INTERNAL_SERVER_ERROR

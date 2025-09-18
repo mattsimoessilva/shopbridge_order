@@ -1,7 +1,10 @@
+# services/order_service.py
+
 import uuid
 from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
+
 from models.dtos.order_create_dto import OrderCreateDTO
 from models.dtos.order_read_dto import OrderReadDTO
 from models.dtos.order_update_dto import OrderUpdateDTO
@@ -14,6 +17,7 @@ from services.mapping.mapper_interface import MapperInterface
 
 
 class OrderService(OrderServiceInterface):
+
     def __init__(self, repository: OrderRepositoryInterface, mapper: MapperInterface):
         self._repository = repository
         self._mapper = mapper
@@ -61,9 +65,11 @@ class OrderService(OrderServiceInterface):
 
         existing.updated_at = datetime.utcnow()
         await self._repository.UpdateAsync(existing, session=session)
+
         return True
 
     async def DeleteAsync(self, id: UUID, session) -> bool:
         if not id:
             raise ValueError("Record identifier cannot be empty.")
+
         return await self._repository.DeleteAsync(id, session=session)

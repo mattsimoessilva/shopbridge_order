@@ -1,12 +1,18 @@
+# repositories/address_repository.py
+
 from typing import List, Optional
 from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
 from models.entities.address import Address
 from repositories.interfaces.address_repository_interface import AddressRepositoryInterface
 from services.mapping.mapper_interface import MapperInterface
 
+
 class AddressRepository(AddressRepositoryInterface):
+
     def __init__(self, mapper: MapperInterface):
         self._mapper = mapper
 
@@ -17,6 +23,7 @@ class AddressRepository(AddressRepositoryInterface):
         session.add(entity)
         await session.commit()
         await session.refresh(entity)
+
         return entity
 
     async def GetAllAsync(self, session: AsyncSession) -> List[Address]:
@@ -27,7 +34,9 @@ class AddressRepository(AddressRepositoryInterface):
         if not id:
             raise ValueError("Record identifier cannot be empty.")
 
-        result = await session.execute(select(Address).where(Address.id == id))
+        result = await session.execute(
+            select(Address).where(Address.id == id)
+        )
         return result.scalars().first()
 
     async def UpdateAsync(self, updated: Address, session: AsyncSession) -> bool:
@@ -40,6 +49,7 @@ class AddressRepository(AddressRepositoryInterface):
 
         self._mapper.map(updated, existing)
         await session.commit()
+
         return True
 
     async def DeleteAsync(self, id: UUID, session: AsyncSession) -> bool:
@@ -52,4 +62,5 @@ class AddressRepository(AddressRepositoryInterface):
 
         await session.delete(existing)
         await session.commit()
+
         return True
