@@ -1,78 +1,55 @@
 from typing import List, Optional
 from uuid import UUID
-
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-
 from models.entities.address import Address
 from repositories.interfaces.address_repository_interface import AddressRepositoryInterface
 from services.mapping.mapper_interface import MapperInterface
 
-
 class AddressRepository(AddressRepositoryInterface):
-
-    def __init__(self, session: AsyncSession, mapper: MapperInterface):
-        self._session = session
+    def __init__(self, mapper: MapperInterface):
         self._mapper = mapper
 
-
-    async def add_async(self, entity: Address) -> Address:
+    async def AddAsync(self, entity: Address, session: AsyncSession) -> Address:
         if entity is None:
-            raise ValueError("The provided record reference cannot be null.")
+            raise ValueError("Record reference cannot be null.")
 
-        self._session.add(entity)
-
-        await self._session.commit()
-        await self._session.refresh(entity)
-
+        session.add(entity)
+        await session.commit()
+        await session.refresh(entity)
         return entity
 
-
-    async def get_all_async(self) -> List[Address]:
-        result = await self._session.execute(
-            select(Address)
-        )
-
+    async def GetAllAsync(self, session: AsyncSession) -> List[Address]:
+        result = await session.execute(select(Address))
         return result.scalars().all()
 
-
-    async def get_by_id_async(self, id: UUID) -> Optional[Address]:
+    async def GetByIdAsync(self, id: UUID, session: AsyncSession) -> Optional[Address]:
         if not id:
-            raise ValueError("The provided record identifier cannot be empty.")
+            raise ValueError("Record identifier cannot be empty.")
 
-        result = await self._session.execute(
-            select(Address).where(Address.id == id)
-        )
-
+        result = await session.execute(select(Address).where(Address.id == id))
         return result.scalars().first()
 
-
-    async def update_async(self, updated: Address) -> bool:
+    async def UpdateAsync(self, updated: Address, session: AsyncSession) -> bool:
         if updated is None:
-            raise ValueError("The provided record data cannot be null.")
+            raise ValueError("Record data cannot be null.")
 
-        existing = await self.get_by_id_async(updated.id)
-
+        existing = await self.GetByIdAsync(updated.id, session=session)
         if existing is None:
             return False
 
         self._mapper.map(updated, existing)
-
-        await self._session.commit()
-
+        await session.commit()
         return True
 
-
-    async def delete_async(self, id: UUID) -> bool:
+    async def DeleteAsync(self, id: UUID, session: AsyncSession) -> bool:
         if not id:
-            raise ValueError("The provided record identifier cannot be empty.")
+            raise ValueError("Record identifier cannot be empty.")
 
-        existing = await self.get_by_id_async(id)
-
+        existing = await self.GetByIdAsync(id, session=session)
         if existing is None:
             return False
 
-        await self._session.delete(existing)
-        await self._session.commit()
-
+        await session.delete(existing)
+        await session.commit()
         return True

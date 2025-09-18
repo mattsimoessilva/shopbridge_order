@@ -1,62 +1,89 @@
-from flask.views import MethodView
-from flask_smorest import Blueprint, abort
+# controllers/order_controller.py
 from uuid import UUID
+from flask import g, jsonify, current_app
+from flask_smorest import Blueprint
 from models.schemas.order_create_schema import OrderCreateSchema
 from models.schemas.order_update_schema import OrderUpdateSchema
-from services.interfaces.order_service_interface import OrderServiceInterface
-from flask_smorest import Blueprint, abort
-
+from models.schemas.order_schema import OrderSchema
 
 blp = Blueprint(
     "orders", "orders",
     url_prefix="/api/orders",
-    description="Operations on orders"
+    description="Operations on Orders"
 )
 
-class OrderController:
-    order_service: OrderServiceInterface = None
+@blp.route("/", methods=["POST"])
+@blp.arguments(OrderCreateSchema)
+@blp.response(201, OrderSchema)
+async def Create(order_data):
+    """Creates a new Order."""
+    try:
+        session = g.db
+        service = current_app.extensions["order_service"]
+        result = await service.CreateAsync(order_data, session=session)
+        return result
+    except ValueError as ex:
+        return jsonify({"error": str(ex)}), 400
+    except Exception as ex:
+        return jsonify({"error": str(ex)}), 500
 
-    def list_orders(self):
-        return  self.order_service.get_all_orders()
 
-    def create_order(self, order_data):
-        return  self.order_service.create_order(order_data)
+@blp.route("/", methods=["GET"])
+@blp.response(200, OrderSchema(many=True))
+async def GetAll():
+    """Retrieves all Orders."""
+    try:
+        session = g.db
+        service = current_app.extensions["order_service"]
+        result = await service.GetAllAsync(session=session)
+        return result
+    except Exception as ex:
+        return jsonify({"error": str(ex)}), 500
 
-    def get_order(self, order_id: UUID):
-        order =  self.order_service.get_order_by_id(order_id)
-        if not order:
-            abort(404, message="Order not found")
-        return order
 
-    def update_order(self, order_data, order_id: UUID):
-        order_data["id"] = order_id
-        return  self.order_service.update_order(order_data)
+@blp.route("/<uuid:order_id>", methods=["GET"])
+@blp.response(200, OrderSchema)
+async def GetById(order_id: UUID):
+    """Retrieves a specific Order by ID."""
+    try:
+        session = g.db
+        service = current_app.extensions["order_service"]
+        dto = await service.GetByIdAsync(order_id, session=session)
+        if dto is None:
+            return jsonify({"message": "Order not found"}), 404
+        return dto
+    except Exception as ex:
+        return jsonify({"error": str(ex)}), 500
 
-    def delete_order(self, order_id: UUID):
-        success =  self.order_service.delete_order(order_id)
+
+@blp.route("/", methods=["PUT"])
+@blp.arguments(OrderUpdateSchema)
+@blp.response(200)
+async def Update(order_data):
+    """Updates an Order record."""
+    try:
+        session = g.db
+        service = current_app.extensions["order_service"]
+        success = await service.UpdateAsync(order_data, session=session)
         if not success:
-            abort(404, message="Order not found")
+            return jsonify({"message": "Order not found"}), 404
+        return {}, 200
+    except ValueError as ex:
+        return jsonify({"error": str(ex)}), 400
+    except Exception as ex:
+        return jsonify({"error": str(ex)}), 500
 
-    @classmethod
-    def register(cls, blp: Blueprint):
-        controller = cls()
 
-        blp.add_url_rule(
-            "/", view_func=controller.list_orders, methods=["GET"]
-        )
-        blp.add_url_rule(
-            "/", view_func=blp.arguments(OrderCreateSchema)(
-                blp.response(201, OrderCreateSchema)(controller.create_order)
-            ), methods=["POST"]
-        )
-        blp.add_url_rule(
-            "/<uuid:order_id>", view_func=controller.get_order, methods=["GET"]
-        )
-        blp.add_url_rule(
-            "/<uuid:order_id>", view_func=blp.arguments(OrderUpdateSchema)(
-                blp.response(200, OrderUpdateSchema)(controller.update_order)
-            ), methods=["PUT"]
-        )
-        blp.add_url_rule(
-            "/<uuid:order_id>", view_func=blp.response(204)(controller.delete_order), methods=["DELETE"]
-        )
+@blp.route("/<uuid:order_id>", methods=["DELETE"])
+@blp.response(204)
+async def Delete(order_id: UUID):
+    """Deletes an Order by ID."""
+    try:
+        session = g.db
+        service = current_app.extensions["order_service"]
+        deleted = await service.DeleteAsync(order_id, session=session)
+        if not deleted:
+            return jsonify({"message": "Order not found"}), 404
+        return "", 204
+    except Exception as ex:
+        return jsonify({"error": str(ex)}), 500

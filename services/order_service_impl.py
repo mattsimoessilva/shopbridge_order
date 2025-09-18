@@ -2,7 +2,6 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
-
 from models.dtos.order_create_dto import OrderCreateDTO
 from models.dtos.order_read_dto import OrderReadDTO
 from models.dtos.order_update_dto import OrderUpdateDTO
@@ -15,78 +14,56 @@ from services.mapping.mapper_interface import MapperInterface
 
 
 class OrderService(OrderServiceInterface):
-
     def __init__(self, repository: OrderRepositoryInterface, mapper: MapperInterface):
         self._repository = repository
         self._mapper = mapper
 
-
-    async def create_async(self, dto: OrderCreateDTO) -> OrderReadDTO:
+    async def CreateAsync(self, dto: OrderCreateDTO, session) -> OrderReadDTO:
         if dto is None:
-            raise ValueError("The provided record data cannot be null.")
+            raise ValueError("Record data cannot be null.")
 
         entity = self._mapper.map(dto, Order)
         entity.id = uuid.uuid4()
         entity.created_at = datetime.utcnow()
         entity.status = OrderStatus.PENDING
-
-        # Calculate total amount
         entity.total_amount = sum(
-            item.unit_price * item.quantity for item in entity.items
+            item.unit_price * item.quantity for item in (entity.items or [])
         )
 
-        await self._repository.add_async(entity)
-
+        await self._repository.AddAsync(entity, session=session)
         return self._mapper.map(entity, OrderReadDTO)
 
+    async def GetAllAsync(self, session) -> List[OrderReadDTO]:
+        entities = await self._repository.GetAllAsync(session=session)
+        return self._mapper.map_list(entities, OrderReadDTO) if entities else []
 
-    async def get_all_async(self) -> List[OrderReadDTO]:
-        entities = await self._repository.get_all_async()
-
-        if not entities:
-            return []
-
-        return self._mapper.map_list(entities, OrderReadDTO)
-
-
-    async def get_by_id_async(self, id: UUID) -> Optional[OrderReadDTO]:
+    async def GetByIdAsync(self, id: UUID, session) -> Optional[OrderReadDTO]:
         if not id:
-            raise ValueError("The provided record identifier cannot be empty.")
+            raise ValueError("Record identifier cannot be empty.")
 
-        entity = await self._repository.get_by_id_async(id)
+        entity = await self._repository.GetByIdAsync(id, session=session)
+        return None if entity is None else self._mapper.map(entity, OrderReadDTO)
 
-        if entity is None:
-            return None
-
-        return self._mapper.map(entity, OrderReadDTO)
-
-
-    async def update_async(self, dto: OrderUpdateDTO) -> bool:
+    async def UpdateAsync(self, dto: OrderUpdateDTO, session) -> bool:
         if dto is None or not dto.id:
-            raise ValueError("The provided record data cannot be null or missing an identifier.")
+            raise ValueError("Record data cannot be null or missing an identifier.")
 
-        existing = await self._repository.get_by_id_async(dto.id)
-
+        existing = await self._repository.GetByIdAsync(dto.id, session=session)
         if existing is None:
             return False
 
         self._mapper.map_to_existing(dto, existing)
 
-        # Recalculate total if items changed
         if dto.items:
             existing.total_amount = sum(
                 item.unit_price * item.quantity for item in existing.items
             )
 
         existing.updated_at = datetime.utcnow()
-
-        await self._repository.update_async(existing)
-
+        await self._repository.UpdateAsync(existing, session=session)
         return True
 
-
-    async def delete_async(self, id: UUID) -> bool:
+    async def DeleteAsync(self, id: UUID, session) -> bool:
         if not id:
-            raise ValueError("The provided record identifier cannot be empty.")
-
-        return await self._repository.delete_async(id)
+            raise ValueError("Record identifier cannot be empty.")
+        return await self._repository.DeleteAsync(id, session=session)

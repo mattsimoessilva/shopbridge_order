@@ -1,78 +1,55 @@
 from typing import List, Optional
 from uuid import UUID
-
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-
-from models.entities.product import Product
-from repositories.interfaces.product_repository_interface import ProductRepositoryInterface
+from models.entities.order import Order
+from repositories.interfaces.order_repository_interface import OrderRepositoryInterface
 from services.mapping.mapper_interface import MapperInterface
 
-
-class ProductRepository(ProductRepositoryInterface):
-
-    def __init__(self, session: AsyncSession, mapper: MapperInterface):
-        self._session = session
+class OrderRepository(OrderRepositoryInterface):
+    def __init__(self, mapper: MapperInterface):
         self._mapper = mapper
 
-
-    async def add_async(self, entity: Product) -> Product:
+    async def AddAsync(self, entity: Order, session: AsyncSession) -> Order:
         if entity is None:
-            raise ValueError("The provided record reference cannot be null.")
+            raise ValueError("Record reference cannot be null.")
 
-        self._session.add(entity)
-
-        await self._session.commit()
-        await self._session.refresh(entity)
-
+        session.add(entity)
+        await session.commit()
+        await session.refresh(entity)
         return entity
 
-
-    async def get_all_async(self) -> List[Product]:
-        result = await self._session.execute(
-            select(Product)
-        )
-
+    async def GetAllAsync(self, session: AsyncSession) -> List[Order]:
+        result = await session.execute(select(Order))
         return result.scalars().all()
 
-
-    async def get_by_id_async(self, id: UUID) -> Optional[Product]:
+    async def GetByIdAsync(self, id: UUID, session: AsyncSession) -> Optional[Order]:
         if not id:
-            raise ValueError("The provided record identifier cannot be empty.")
+            raise ValueError("Record identifier cannot be empty.")
 
-        result = await self._session.execute(
-            select(Product).where(Product.id == id)
-        )
-
+        result = await session.execute(select(Order).where(Order.id == id))
         return result.scalars().first()
 
-
-    async def update_async(self, updated: Product) -> bool:
+    async def UpdateAsync(self, updated: Order, session: AsyncSession) -> bool:
         if updated is None:
-            raise ValueError("The provided record data cannot be null.")
+            raise ValueError("Record data cannot be null.")
 
-        existing = await self.get_by_id_async(updated.id)
-
+        existing = await self.GetByIdAsync(updated.id, session=session)
         if existing is None:
             return False
 
         self._mapper.map(updated, existing)
-
-        await self._session.commit()
-
+        await session.commit()
         return True
 
-
-    async def delete_async(self, id: UUID) -> bool:
+    async def DeleteAsync(self, id: UUID, session: AsyncSession) -> bool:
         if not id:
-            raise ValueError("The provided record identifier cannot be empty.")
+            raise ValueError("Record identifier cannot be empty.")
 
-        existing = await self.get_by_id_async(id)
-
+        existing = await self.GetByIdAsync(id, session=session)
         if existing is None:
             return False
 
-        await self._session.delete(existing)
-        await self._session.commit()
-
+        await session.delete(existing)
+        await session.commit()
         return True

@@ -16,54 +16,44 @@ class AddressService(AddressServiceInterface):
         self._repository = repository
         self._mapper = mapper
 
-    async def create_async(self, dto: AddressCreateDTO) -> AddressReadDTO:
+    async def CreateAsync(self, dto: AddressCreateDTO, session) -> AddressReadDTO:
         if dto is None:
-            raise ValueError("DTO cannot be None")
+            raise ValueError("Record data cannot be null.")
 
         entity = self._mapper.map(dto, Address)
         entity.id = uuid4()
         entity.created_at = datetime.utcnow()
 
-        await self._repository.add_async(entity)
-
+        await self._repository.AddAsync(entity, session=session)
         return self._mapper.map(entity, AddressReadDTO)
 
-    async def get_all_async(self) -> List[AddressReadDTO]:
-        entities = await self._repository.get_all_async()
+    async def GetAllAsync(self, session) -> List[AddressReadDTO]:
+        entities = await self._repository.GetAllAsync(session=session)
+        return self._mapper.map_list(entities, AddressReadDTO) if entities else []
 
-        if not entities:
-            return []
-
-        return self._mapper.map_list(entities, AddressReadDTO)
-
-    async def get_by_id_async(self, id: UUID) -> Optional[AddressReadDTO]:
+    async def GetByIdAsync(self, id: UUID, session) -> Optional[AddressReadDTO]:
         if not id:
-            raise ValueError("Invalid ID")
+            raise ValueError("Record identifier cannot be empty.")
 
-        entity = await self._repository.get_by_id_async(id)
+        entity = await self._repository.GetByIdAsync(id, session=session)
+        return None if entity is None else self._mapper.map(entity, AddressReadDTO)
 
-        if entity is None:
-            return None
-
-        return self._mapper.map(entity, AddressReadDTO)
-
-    async def update_async(self, dto: AddressUpdateDTO) -> bool:
+    async def UpdateAsync(self, dto: AddressUpdateDTO, session) -> bool:
         if dto is None or not dto.id:
-            raise ValueError("Invalid update data")
+            raise ValueError("Record data cannot be null or missing an identifier.")
 
-        existing = await self._repository.get_by_id_async(dto.id)
+        existing = await self._repository.GetByIdAsync(dto.id, session=session)
         if existing is None:
             return False
 
         self._mapper.map_to_existing(dto, existing)
         existing.updated_at = datetime.utcnow()
 
-        await self._repository.update_async(existing)
+        await self._repository.UpdateAsync(existing, session=session)
         return True
 
-    async def delete_async(self, id: UUID) -> bool:
+    async def DeleteAsync(self, id: UUID, session) -> bool:
         if not id:
-            raise ValueError("Invalid ID")
+            raise ValueError("Record identifier cannot be empty.")
 
-        await self._repository.delete_async(id)
-        return True
+        return await self._repository.DeleteAsync(id, session=session)
