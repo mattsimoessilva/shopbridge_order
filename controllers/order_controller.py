@@ -4,9 +4,9 @@ from uuid import UUID
 from flask import g, jsonify, current_app
 from flask_smorest import Blueprint
 
-from models.schemas.order_create_schema import OrderCreateSchema
-from models.schemas.order_update_schema import OrderUpdateSchema
-from models.schemas.order_schema import OrderSchema
+from models.schemas.order.order_create_schema import OrderCreateSchema
+from models.schemas.order.order_update_schema import OrderUpdateSchema
+from models.schemas.order.order_read_schema import OrderReadSchema
 
 
 blp = Blueprint(
@@ -19,7 +19,7 @@ blp = Blueprint(
 
 @blp.route("/", methods=["POST"])
 @blp.arguments(OrderCreateSchema)
-@blp.response(201, OrderSchema)
+@blp.response(201, OrderReadSchema)
 async def Create(order_data):
     """Creates a new Order."""
     try:
@@ -37,7 +37,7 @@ async def Create(order_data):
 
 
 @blp.route("/", methods=["GET"])
-@blp.response(200, OrderSchema(many=True))
+@blp.response(200, OrderReadSchema(many=True))
 async def GetAll():
     """Retrieves all Orders."""
     try:
@@ -52,7 +52,7 @@ async def GetAll():
 
 
 @blp.route("/<uuid:order_id>", methods=["GET"])
-@blp.response(200, OrderSchema)
+@blp.response(200, OrderReadSchema)
 async def GetById(order_id: UUID):
     """Retrieves a specific Order by ID."""
     try:

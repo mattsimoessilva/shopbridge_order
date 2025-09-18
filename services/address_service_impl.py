@@ -4,9 +4,9 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID, uuid4
 
-from models.dtos.address_create_dto import AddressCreateDTO
-from models.dtos.address_read_dto import AddressReadDTO
-from models.dtos.address_update_dto import AddressUpdateDTO
+from models.dtos.address.address_create_dto import AddressCreateDTO
+from models.dtos.address.address_read_dto import AddressReadDTO
+from models.dtos.address.address_update_dto import AddressUpdateDTO
 from models.entities.address import Address
 from repositories.interfaces.address_repository_interface import AddressRepositoryInterface
 from services.interfaces.address_service_interface import AddressServiceInterface

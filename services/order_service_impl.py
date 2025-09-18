@@ -5,9 +5,9 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from models.dtos.order_create_dto import OrderCreateDTO
-from models.dtos.order_read_dto import OrderReadDTO
-from models.dtos.order_update_dto import OrderUpdateDTO
+from models.dtos.order.order_create_dto import OrderCreateDTO
+from models.dtos.order.order_read_dto import OrderReadDTO
+from models.dtos.order.order_update_dto import OrderUpdateDTO
 from models.entities.order import Order
 from models.entities.order_item import OrderItem
 from models.enums.order_status import OrderStatus
