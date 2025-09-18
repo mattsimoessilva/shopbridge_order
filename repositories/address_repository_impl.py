@@ -4,19 +4,19 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from models.entities.product import Product
-from repositories.interfaces.product_repository_interface import ProductRepositoryInterface
+from models.entities.address import Address
+from repositories.interfaces.address_repository_interface import AddressRepositoryInterface
 from services.mapping.mapper_interface import MapperInterface
 
 
-class ProductRepository(ProductRepositoryInterface):
+class AddressRepository(AddressRepositoryInterface):
 
     def __init__(self, session: AsyncSession, mapper: MapperInterface):
         self._session = session
         self._mapper = mapper
 
 
-    async def add_async(self, entity: Product) -> Product:
+    async def add_async(self, entity: Address) -> Address:
         if entity is None:
             raise ValueError("The provided record reference cannot be null.")
 
@@ -28,26 +28,26 @@ class ProductRepository(ProductRepositoryInterface):
         return entity
 
 
-    async def get_all_async(self) -> List[Product]:
+    async def get_all_async(self) -> List[Address]:
         result = await self._session.execute(
-            select(Product)
+            select(Address)
         )
 
         return result.scalars().all()
 
 
-    async def get_by_id_async(self, id: UUID) -> Optional[Product]:
+    async def get_by_id_async(self, id: UUID) -> Optional[Address]:
         if not id:
             raise ValueError("The provided record identifier cannot be empty.")
 
         result = await self._session.execute(
-            select(Product).where(Product.id == id)
+            select(Address).where(Address.id == id)
         )
 
         return result.scalars().first()
 
 
-    async def update_async(self, updated: Product) -> bool:
+    async def update_async(self, updated: Address) -> bool:
         if updated is None:
             raise ValueError("The provided record data cannot be null.")
 
