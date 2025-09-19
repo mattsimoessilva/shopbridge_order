@@ -1,4 +1,6 @@
-from .order_controller import OrderController
-from .address_controller import AddressController
+# controllers/__init__.py
 
-__all__ = ["OrderController", "AddressController"]
+from .order_controller import blp as order_blp
+from .address_controller import blp as address_blp
+
+__all__ = ["order_blp", "address_blp"]

@@ -1,6 +1,6 @@
 from marshmallow import Schema, fields, post_dump
 
-class OrderItemSchema(Schema):
+class OrderItemReadSchema(Schema):
     product_id = fields.UUID(required=True, metadata={"description": "Product's unique identifier"})
     quantity = fields.Integer(required=True, metadata={"description": "Quantity of the product ordered"})
     unit_price = fields.Float(allow_none=True, metadata={"description": "Unit price of the product"})

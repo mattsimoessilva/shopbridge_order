@@ -1,5 +1,5 @@
 from marshmallow import Schema, fields
-from models.schemas.order_item_schema import OrderItemSchema
+from models.schemas.order_item.order_item_read_schema import OrderItemReadSchema
 
 class OrderResponseSchema(Schema):
     id = fields.UUID(required=True, metadata={"description": "Order's unique identifier"})
@@ -8,7 +8,7 @@ class OrderResponseSchema(Schema):
     status = fields.String(required=True, metadata={"description": "Current status of the order"})
 
     items = fields.List(
-        fields.Nested(OrderItemSchema),
+        fields.Nested(OrderItemReadSchema),
         required=True,
         metadata={"description": "List of items in the order"}
     )

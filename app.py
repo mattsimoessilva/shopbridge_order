@@ -1,15 +1,27 @@
-# app.py
 from flask import Flask, g
 from flask_smorest import Api
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
-from controllers.order_controller import blp as order_blp, OrderController
+
+# Blueprint aliases from controllers/__init__.py
+from controllers import order_blp as OrderController, address_blp as AddressController
+
+# Repositories
 from repositories.order_repository_impl import OrderRepository
+from repositories.address_repository_impl import AddressRepository
+
+# Services
 from services.order_service_impl import OrderService
+from services.address_service_impl import AddressService
+
+# Shared mapper
 from services.mapping.mapper_impl import Mapper
+
+# SQLAlchemy Base
 from models.entities.base import Base
 
 DATABASE_URL = "sqlite+aiosqlite:///./order.db"
+
 
 def create_app():
     app = Flask(__name__)
@@ -26,7 +38,7 @@ def create_app():
     # Initialize Swagger API
     api = Api(app)
 
-    # Async DB engine and session factory (global, not per request)
+    # Async DB engine and session factory
     engine = create_async_engine(DATABASE_URL, echo=True, future=True)
     async_session_factory = sessionmaker(
         bind=engine,
@@ -34,15 +46,22 @@ def create_app():
         expire_on_commit=False
     )
 
-    # Store factories and singletons in app.extensions (DI container)
+    # Shared mapper
     mapper = Mapper()
-    repository = OrderRepository(session_factory=async_session_factory, mapper=mapper)
-    service = OrderService(repository=repository, mapper=mapper)
 
+    # Dependency injection: repositories & services
+    order_repository = OrderRepository(session_factory=async_session_factory, mapper=mapper)
+    order_service = OrderService(repository=order_repository, mapper=mapper)
+
+    address_repository = AddressRepository(session_factory=async_session_factory, mapper=mapper)
+    address_service = AddressService(repository=address_repository, mapper=mapper)
+
+    # Store in app.extensions for controller access
     app.extensions["engine"] = engine
     app.extensions["session_factory"] = async_session_factory
     app.extensions["mapper"] = mapper
-    app.extensions["order_service"] = service
+    app.extensions["order_service"] = order_service
+    app.extensions["address_service"] = address_service
 
     # Async startup/shutdown hooks
     @app.before_serving
@@ -58,24 +77,35 @@ def create_app():
     # Per-request session: create on request start, close on teardown
     @app.before_request
     async def create_session():
-        # Create but don’t start a transaction; let repository manage as needed
         g.db = async_session_factory()
 
     @app.teardown_request
     async def close_session(exc):
         session = getattr(g, "db", None)
         if session is not None:
-            await session.close()
+            try:
+                await session.close()
+            except Exception:
+                pass  # Avoid masking original exceptions
 
-    # Inject service into controller and register blueprint
-    order_controller = OrderController(service=service)
-    api.register_blueprint(order_blp)
+    # Register blueprints
+    api.register_blueprint(OrderController)
+    api.register_blueprint(AddressController)
 
     return app
+
 
 app = create_app()
 
 if __name__ == "__main__":
-    # Dev only. Async support is limited in the built-in server.
-    # For proper async, run with an ASGI server (see run instructions below).
-    app.run(debug=True)
+    import asyncio
+    try:
+        from hypercorn.asyncio import serve
+        from hypercorn.config import Config
+
+        config = Config()
+        config.bind = ["0.0.0.0:8000"]
+        asyncio.run(serve(app, config))
+    except ImportError:
+        print("Hypercorn not installed. Falling back to Flask dev server.")
+        app.run(debug=True)
