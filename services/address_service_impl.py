@@ -10,8 +10,7 @@ from models.dtos.address.address_update_dto import AddressUpdateDTO
 from models.entities.address import Address
 from repositories.interfaces.address_repository_interface import AddressRepositoryInterface
 from services.interfaces.address_service_interface import AddressServiceInterface
-from services.mapping.mapper_interface import MapperInterface  # Similar to AutoMapper
-
+from common.mapping.mapper_interface import MapperInterface
 
 class AddressService(AddressServiceInterface):
 

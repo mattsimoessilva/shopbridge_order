@@ -8,13 +8,15 @@ from sqlalchemy.future import select
 
 from models.entities.address import Address
 from repositories.interfaces.address_repository_interface import AddressRepositoryInterface
-from services.mapping.mapper_interface import MapperInterface
+from common.mapping.mapper_interface import MapperInterface
 
 
 class AddressRepository(AddressRepositoryInterface):
 
-    def __init__(self, mapper: MapperInterface):
+    def __init__(self, session_factory, mapper):
+        self._session_factory = session_factory
         self._mapper = mapper
+
 
     async def AddAsync(self, entity: Address, session: AsyncSession) -> Address:
         if entity is None:

@@ -13,7 +13,7 @@ from models.entities.order_item import OrderItem
 from models.enums.order_status import OrderStatus
 from repositories.interfaces.order_repository_interface import OrderRepositoryInterface
 from services.interfaces.order_service_interface import OrderServiceInterface
-from services.mapping.mapper_interface import MapperInterface
+from common.mapping.mapper_interface import MapperInterface
 
 
 class OrderService(OrderServiceInterface):

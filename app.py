@@ -3,7 +3,7 @@ from flask_smorest import Api
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-# Blueprint aliases from controllers/__init__.py
+# Blueprints
 from controllers import order_blp as OrderController, address_blp as AddressController
 
 # Repositories
@@ -14,8 +14,8 @@ from repositories.address_repository_impl import AddressRepository
 from services.order_service_impl import OrderService
 from services.address_service_impl import AddressService
 
-# Shared mapper
-from services.mapping.mapper_impl import Mapper
+# Mapper
+from common.mapping.mapper_impl import Mapper
 
 # SQLAlchemy Base
 from models.entities.base import Base
@@ -27,15 +27,16 @@ def create_app():
     app = Flask(__name__)
 
     # Swagger / OpenAPI config
-    app.config["API_TITLE"] = "Order API"
-    app.config["API_VERSION"] = "v1"
-    app.config["OPENAPI_VERSION"] = "3.0.3"
-    app.config["OPENAPI_URL_PREFIX"] = "/"
-    app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
-    app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
-    app.config["OPENAPI_JSON_PATH"] = "openapi.json"
+    app.config.update(
+        API_TITLE="Order API",
+        API_VERSION="v1",
+        OPENAPI_VERSION="3.0.3",
+        OPENAPI_URL_PREFIX="/",
+        OPENAPI_SWAGGER_UI_PATH="/swagger-ui",
+        OPENAPI_SWAGGER_UI_URL="https://cdn.jsdelivr.net/npm/swagger-ui-dist/",
+        OPENAPI_JSON_PATH="openapi.json"
+    )
 
-    # Initialize Swagger API
     api = Api(app)
 
     # Async DB engine and session factory
@@ -49,32 +50,30 @@ def create_app():
     # Shared mapper
     mapper = Mapper()
 
-    # Dependency injection: repositories & services
+    # Dependency injection
     order_repository = OrderRepository(session_factory=async_session_factory, mapper=mapper)
     order_service = OrderService(repository=order_repository, mapper=mapper)
-
     address_repository = AddressRepository(session_factory=async_session_factory, mapper=mapper)
     address_service = AddressService(repository=address_repository, mapper=mapper)
 
     # Store in app.extensions for controller access
-    app.extensions["engine"] = engine
-    app.extensions["session_factory"] = async_session_factory
-    app.extensions["mapper"] = mapper
-    app.extensions["order_service"] = order_service
-    app.extensions["address_service"] = address_service
+    app.extensions.update(
+        engine=engine,
+        session_factory=async_session_factory,
+        mapper=mapper,
+        order_service=order_service,
+        address_service=address_service
+    )
 
-    # Async startup/shutdown hooks
-    @app.before_serving
+    # Run startup logic immediately when app is created
     async def startup():
-        # Create tables once at startup (dev). Prefer Alembic migrations in prod.
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
-    @app.after_serving
-    async def shutdown():
-        await engine.dispose()
+    import asyncio
+    asyncio.run(startup())
 
-    # Per-request session: create on request start, close on teardown
+    # Per-request session
     @app.before_request
     async def create_session():
         g.db = async_session_factory()
@@ -86,7 +85,7 @@ def create_app():
             try:
                 await session.close()
             except Exception:
-                pass  # Avoid masking original exceptions
+                pass
 
     # Register blueprints
     api.register_blueprint(OrderController)

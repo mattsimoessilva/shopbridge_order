@@ -1,105 +1,32 @@
+from abc import ABC, abstractmethod
+from typing import List, Optional
 from uuid import UUID
-from flask import Blueprint, request, jsonify
-from http import HTTPStatus
-from services.interfaces.order_service_interface import OrderServiceInterface
-from models.schemas.order.order_create_schema import OrderCreateSchema
-from models.schemas.order.order_update_schema import OrderUpdateSchema
-from models.dtos.order.order_create_dto import OrderCreateDTO
-from models.dtos.order.order_update_dto import OrderUpdateDTO
-from marshmallow import ValidationError
+
+from models.entities.order import Order
 
 
-blp = Blueprint("orders", __name__, url_prefix="/api/orders")
+class OrderRepositoryInterface(ABC):
+    @abstractmethod
+    async def AddAsync(self, address: Order) -> Order:
+        """Add a new Order entity to the database."""
+        pass
 
+    @abstractmethod
+    async def GetAllAsync(self) -> List[Order]:
+        """Retrieve all Order entities."""
+        pass
 
-class OrderController:
+    @abstractmethod
+    async def GetByIdAsync(self, id: UUID) -> Optional[Order]:
+        """Retrieve a single Order entity by its ID."""
+        pass
 
-    def __init__(self, service: OrderServiceInterface):
-        self._service = service
+    @abstractmethod
+    async def UpdateAsync(self, address: Order) -> bool:
+        """Update an existing Order entity. Returns True if successful."""
+        pass
 
-
-    @blp.route("/", methods=["POST"])
-    async def create(self):
-        """Creates a new Order."""
-        try:
-            data = request.get_json()
-
-            validated_data = OrderCreateSchema().load(data)
-
-            dto = OrderCreateDTO(**validated_data)
-
-            result = await self._service.create_async(dto)
-
-            return jsonify(result), HTTPStatus.CREATED
-
-        except ValidationError as err:
-            return jsonify({"errors": err.messages}), HTTPStatus.BAD_REQUEST
-
-        except Exception as ex:
-            return jsonify({"error": str(ex)}), HTTPStatus.INTERNAL_SERVER_ERROR
-
-
-    @blp.route("/", methods=["GET"])
-    async def get_all(self):
-        """Retrieves all Orders."""
-        try:
-            result = await self._service.get_all_async()
-
-            return jsonify(result), HTTPStatus.OK
-
-        except Exception as ex:
-            return jsonify({"error": str(ex)}), HTTPStatus.INTERNAL_SERVER_ERROR
-
-
-    @blp.route("/<uuid:order_id>", methods=["GET"])
-    async def get_by_id(self, order_id: UUID):
-        """Retrieves a specific Order by ID."""
-        try:
-            result = await self._service.get_by_id_async(order_id)
-
-            if not result:
-                return jsonify({"message": "Order not found"}), HTTPStatus.NOT_FOUND
-
-            return jsonify(result), HTTPStatus.OK
-
-        except Exception as ex:
-            return jsonify({"error": str(ex)}), HTTPStatus.INTERNAL_SERVER_ERROR
-
-
-    @blp.route("/", methods=["PUT"])
-    async def update(self):
-        """Updates an Order record."""
-        try:
-            data = request.get_json()
-
-            validated_data = OrderUpdateSchema().load(data)
-
-            dto = OrderUpdateDTO(**validated_data)
-
-            success = await self._service.update_async(dto)
-
-            if not success:
-                return jsonify({"message": "Order not found"}), HTTPStatus.NOT_FOUND
-
-            return "", HTTPStatus.OK
-
-        except ValidationError as err:
-            return jsonify({"errors": err.messages}), HTTPStatus.BAD_REQUEST
-
-        except Exception as ex:
-            return jsonify({"error": str(ex)}), HTTPStatus.INTERNAL_SERVER_ERROR
-
-
-    @blp.route("/<uuid:order_id>", methods=["DELETE"])
-    async def delete(self, order_id: UUID):
-        """Deletes an Order by ID."""
-        try:
-            deleted = await self._service.delete_async(order_id)
-
-            if not deleted:
-                return jsonify({"message": "Order not found"}), HTTPStatus.NOT_FOUND
-
-            return "", HTTPStatus.NO_CONTENT
-
-        except Exception as ex:
-            return jsonify({"error": str(ex)}), HTTPStatus.INTERNAL_SERVER_ERROR
+    @abstractmethod
+    async def DeleteAsync(self, id: UUID) -> bool:
+        """Delete an Order entity by its ID. Returns True if successful."""
+        pass
