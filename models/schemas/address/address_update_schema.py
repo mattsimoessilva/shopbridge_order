@@ -1,6 +1,7 @@
 from marshmallow import Schema, fields, validate
 
 class AddressUpdateSchema(Schema):
+    id = fields.UUID(required=True)
     street = fields.String(
         required=False,
         validate=validate.Length(max=100)
