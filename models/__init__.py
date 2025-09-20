@@ -10,6 +10,7 @@ from .schemas.order.order_request_schema import OrderRequestSchema
 from .schemas.order.order_response_schema import OrderResponseSchema
 from .schemas.address.address_create_schema import AddressCreateSchema
 from .schemas.address.address_update_schema import AddressUpdateSchema
+from .schemas.address.address_read_schema import AddressReadSchema
 from .schemas.order_item.order_item_read_schema import OrderItemReadSchema
 
 from .dtos.address.address_create_dto import AddressCreateDTO
@@ -26,7 +27,7 @@ from .enums.order_status import OrderStatus
 
 __all__ = [
     "Order", "OrderItem", "Address", "Base",
-    "OrderCreateSchema", "OrderReadSchema", "OrderUpdateSchema", "OrderRequestSchema", "OrderResponseSchema", "AddressCreateSchema", "AddresaUpdateSchema", "OrderItemReadSchema",
+    "OrderCreateSchema", "OrderReadSchema", "OrderUpdateSchema", "OrderRequestSchema", "OrderResponseSchema", "AddressCreateSchema", "AddresaUpdateSchema", "AddressReadSchema", "OrderItemReadSchema",
     "OrderCreateDTO", "OrderReadDTO", "OrderUpdateDTO", "AddressCreateDTO", "AddressReadDTO", "AddressUpdateDTO", "OrderItemCreateDTO", "OrderItemReadDTO", "OrderItemUpdateDTO",
     "OrderStatus"
 ]

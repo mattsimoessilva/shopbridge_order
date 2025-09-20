@@ -6,12 +6,13 @@ from .order.order_response_schema import OrderResponseSchema
 
 from .address.address_create_schema import AddressCreateSchema
 from .address.address_update_schema import AddressUpdateSchema
+from .address.address_read_schema import AddressReadSchema
 
 from .order_item.order_item_read_schema import OrderItemReadSchema
 
 __all__ = [
     "OrderCreateSchema", "OrderReadSchema", "OrderUpdateSchema", "OrderRequestSchema", "OrderResponseSchema",
-    "AddressCreateSchema", "AddresaUpdateSchema",
+    "AddressCreateSchema", "AddresaUpdateSchema", "AddressReadSchema",
     "OrderItemReadSchema"
 ]
 

@@ -1,6 +1,4 @@
-# services/address_service.py
-
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from uuid import UUID, uuid4
 
@@ -12,6 +10,7 @@ from repositories.interfaces.address_repository_interface import AddressReposito
 from services.interfaces.address_service_interface import AddressServiceInterface
 from common.mapping.mapper_interface import MapperInterface
 
+
 class AddressService(AddressServiceInterface):
 
     def __init__(self, repository: AddressRepositoryInterface, mapper: MapperInterface):
@@ -21,35 +20,94 @@ class AddressService(AddressServiceInterface):
     async def CreateAsync(self, dto: AddressCreateDTO, session) -> AddressReadDTO:
         if dto is None:
             raise ValueError("Record data cannot be null.")
+        if isinstance(dto, dict):
+            dto = AddressCreateDTO(**dto)
 
-        entity = self._mapper.map(dto, Address)
-        entity.id = uuid4()
-        entity.created_at = datetime.utcnow()
+        entity = Address(
+            id=uuid4(),
+            street=dto.street,
+            city=dto.city,
+            state=dto.state,
+            postal_code=dto.postal_code,
+            country=dto.country,
+            created_at=datetime.now(timezone.utc)
+        )
 
         await self._repository.AddAsync(entity, session=session)
-        return self._mapper.map(entity, AddressReadDTO)
+
+        return AddressReadDTO(
+            id=entity.id,
+            street=entity.street,
+            city=entity.city,
+            state=entity.state,
+            postal_code=entity.postal_code,
+            country=entity.country,
+            created_at=entity.created_at,
+            updated_at=entity.updated_at,
+            deleted_at=getattr(entity, "deleted_at", None)
+        )
 
     async def GetAllAsync(self, session) -> List[AddressReadDTO]:
         entities = await self._repository.GetAllAsync(session=session)
-        return self._mapper.map_list(entities, AddressReadDTO) if entities else []
+        if not entities:
+            return []
+        return [
+            AddressReadDTO(
+                id=e.id,
+                street=e.street,
+                city=e.city,
+                state=e.state,
+                postal_code=e.postal_code,
+                country=e.country,
+                created_at=e.created_at,
+                updated_at=e.updated_at,
+                deleted_at=getattr(e, "deleted_at", None)
+            )
+            for e in entities
+        ]
 
     async def GetByIdAsync(self, id: UUID, session) -> Optional[AddressReadDTO]:
         if not id:
             raise ValueError("Record identifier cannot be empty.")
 
         entity = await self._repository.GetByIdAsync(id, session=session)
-        return None if entity is None else self._mapper.map(entity, AddressReadDTO)
+        if entity is None:
+            return None
+
+        return AddressReadDTO(
+            id=entity.id,
+            street=entity.street,
+            city=entity.city,
+            state=entity.state,
+            postal_code=entity.postal_code,
+            country=entity.country,
+            created_at=entity.created_at,
+            updated_at=entity.updated_at,
+            deleted_at=getattr(entity, "deleted_at", None)
+        )
 
     async def UpdateAsync(self, dto: AddressUpdateDTO, session) -> bool:
         if dto is None or not dto.id:
             raise ValueError("Record data cannot be null or missing an identifier.")
+        if isinstance(dto, dict):
+            dto = AddressUpdateDTO(**dto)
 
         existing = await self._repository.GetByIdAsync(dto.id, session=session)
         if existing is None:
             return False
 
-        self._mapper.map_to_existing(dto, existing)
-        existing.updated_at = datetime.utcnow()
+        if dto.street is not None:
+            existing.street = dto.street
+        if dto.city is not None:
+            existing.city = dto.city
+        if dto.state is not None:
+            existing.state = dto.state
+        if dto.postal_code is not None:
+            existing.postal_code = dto.postal_code
+        if dto.country is not None:
+            existing.country = dto.country
+
+        existing.updated_at = datetime.now(timezone.utc)
 
         await self._repository.UpdateAsync(existing, session=session)
         return True
@@ -57,5 +115,4 @@ class AddressService(AddressServiceInterface):
     async def DeleteAsync(self, id: UUID, session) -> bool:
         if not id:
             raise ValueError("Record identifier cannot be empty.")
-
         return await self._repository.DeleteAsync(id, session=session)
