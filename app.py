@@ -71,7 +71,13 @@ def create_app():
             await conn.run_sync(Base.metadata.create_all)
 
     import asyncio
-    asyncio.run(startup())
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        asyncio.run(startup())  # normal app startup
+    else:
+        loop.create_task(startup())  # running inside pytest/ASGI
+
 
     # Per-request session
     @app.before_request

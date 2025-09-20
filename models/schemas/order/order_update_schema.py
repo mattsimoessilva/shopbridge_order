@@ -4,10 +4,10 @@ from marshmallow.validate import OneOf
 from models.enums import OrderStatus
 
 class OrderUpdateSchema(Schema):
+    id = fields.UUID(required=True)
     status = fields.String(
         required=False,
         validate=OneOf([status.value for status in OrderStatus]),
         metadata={"description": "Updated status of the order"}
     )
-    items = fields.List(fields.Nested(OrderItemReadSchema), required=False, metadata={"description": "Updated list of items"})
     deleted_at = fields.DateTime(required=False, allow_none=True, metadata={"description": "Timestamp for soft deletion"})
