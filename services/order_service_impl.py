@@ -32,12 +32,25 @@ class OrderService(OrderServiceInterface):
         if isinstance(dto, dict):
             dto = OrderCreateDTO(**dto)
 
-        # Get product prices from external API
+        # Get product prices from external API and reserve stock
         for item in dto.items:
-            product_data = await self._product_client.get_product(item.product_id)
-            if not product_data:
-                raise RuntimeError(f"Product {item.product_id} not found.")
-            item.unit_price = Decimal(product_data["price"])
+            if item.product_variant_id:
+                product_data = await self._product_client.get_variant(item.product_variant_id)
+                if not product_data:
+                    raise RuntimeError(f"Product Variant {item.product_variant_id} not found.")
+                item.unit_price = Decimal(product_data["price"])
+
+                # Reserve variant stock
+                await self._product_client.reserve_variant_stock(item.product_variant_id, item.quantity)
+
+            else:
+                product_data = await self._product_client.get_product(item.product_id)
+                if not product_data:
+                    raise RuntimeError(f"Product {item.product_id} not found.")
+                item.unit_price = Decimal(product_data["price"])
+
+                # Reserve product stock
+                await self._product_client.reserve_product_stock(item.product_id, item.quantity)
 
         # Prepare order entity (not yet saved)
         entity = Order(
@@ -48,18 +61,23 @@ class OrderService(OrderServiceInterface):
             items=[
                 OrderItem(
                     product_id=item.product_id,
+                    product_variant_id=item.product_variant_id,
                     quantity=item.quantity,
                     unit_price=item.unit_price
                 )
                 for item in dto.items
             ]
         )
+
+        # Calculate total amount
         entity.total_amount = sum(
             Decimal(item.unit_price) * item.quantity for item in entity.items
         )
 
+        # Save to DB
         await self._repository.AddAsync(entity, session=session)
 
+        # Return read DTO
         return OrderReadDTO(
             id=entity.id,
             created_at=entity.created_at,
@@ -71,6 +89,7 @@ class OrderService(OrderServiceInterface):
                 OrderItemReadDTO(
                     id=i.id,
                     product_id=i.product_id,
+                    product_variant_id=i.product_variant_id,
                     quantity=i.quantity,
                     unit_price=i.unit_price,
                     total_price=i.unit_price * i.quantity
@@ -78,6 +97,7 @@ class OrderService(OrderServiceInterface):
                 for i in entity.items
             ]
         )
+
 
     async def GetAllAsync(self, session) -> List[OrderReadDTO]:
         entities = await self._repository.GetAllAsync(session=session)
@@ -95,6 +115,7 @@ class OrderService(OrderServiceInterface):
                     OrderItemReadDTO(
                         id=i.id,
                         product_id=i.product_id,
+                        product_variant_id=i.product_variant_id,
                         quantity=i.quantity,
                         unit_price=i.unit_price,
                         total_price=i.unit_price * i.quantity
@@ -124,6 +145,7 @@ class OrderService(OrderServiceInterface):
                 OrderItemReadDTO(
                     id=item.id,
                     product_id=item.product_id,
+                    product_variant_id=item.product_variant_id,
                     quantity=item.quantity,
                     unit_price=item.unit_price,
                     total_price=item.unit_price * item.quantity
@@ -145,6 +167,23 @@ class OrderService(OrderServiceInterface):
 
         if dto.status is not None:
             existing.status = dto.status
+
+            # Handle stock changes based on status transitions
+            if dto.status == OrderStatus.CANCELLED:
+                # Release reserved stock
+                for item in existing.items:
+                    if item.product_variant_id:
+                        await self._product_client.release_variant_stock(item.product_variant_id, item.quantity)
+                    else:
+                        await self._product_client.release_product_stock(item.product_id, item.quantity)
+
+            elif dto.status == OrderStatus.COMPLETED:
+                # Deduct final stock (reduce reserved + total)
+                for item in existing.items:
+                    if item.product_variant_id:
+                        await self._product_client.reduce_variant_stock(item.product_variant_id, item.quantity)
+                    else:
+                        await self._product_client.reduce_product_stock(item.product_id, item.quantity)
 
             # Shipment creation trigger
             if dto.status == OrderStatus.PROCESSING:

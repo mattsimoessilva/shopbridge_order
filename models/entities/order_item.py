@@ -17,6 +17,8 @@ class OrderItem(Base):
 
     product_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)
 
+    product_variant_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=True)
+
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
 
     unit_price: Mapped[float] = mapped_column(Float, nullable=True)
