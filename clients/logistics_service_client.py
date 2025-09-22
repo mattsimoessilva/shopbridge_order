@@ -1,6 +1,8 @@
 import aiohttp
 import asyncio
 from typing import Any, Dict, Optional
+import json
+
 
 class LogisticsServiceClient:
     def __init__(self, base_url: str):
@@ -25,24 +27,53 @@ class LogisticsServiceClient:
     async def create_shipment(
         self,
         order_id: str,
-        address: Dict[str, Any],
-        package_details: Dict[str, Any]
+        status: str,
+        dispatchDate: Optional[str],
+        carrier: str,
+        serviceLevel: str,
+        street: str,
+        city: str,
+        state: str,
+        postalCode: str,
+        country: str
     ) -> Dict[str, Any]:
         """
-        Create a shipment request.
+        Create a shipment request matching ShipmentCreateDTO.
         """
         session = await self._get_session()
         url = f"{self._base_url}/Shipment"
         payload = {
-            "order_id": order_id,
-            "address": address,
-            "package_details": package_details
+            "orderId": order_id,
+            "status": status,
+            "dispatchDate": dispatchDate,
+            "carrier": carrier,
+            "serviceLevel": serviceLevel,
+            "street": street,
+            "city": city,
+            "state": state,
+            "postalCode": postalCode,
+            "country": country
         }
-        async with session.post(url, json=payload, timeout=5) as resp:
-            if resp.status != 201:
-                text = await resp.text()
-                raise RuntimeError(f"Error creating shipment: {resp.status} - {text}")
-            return await resp.json()
+
+        async with session.post(url, json=payload, timeout=5) as r:
+            status_code = r.status
+            headers = r.headers
+            text_body = await r.text()
+
+            print(status_code)
+            print(headers)
+            print(text_body)
+
+            if status_code != 201:
+                raise RuntimeError(f"Error creating shipment: {status_code} - {text_body}")
+
+            # Only parse JSON if there is a body and the content type is JSON
+            if text_body.strip() and headers.get("Content-Type", "").startswith("application/json"):
+                return json.loads(text_body)
+
+            return {}
+
+
 
     async def get_shipment(self, shipment_id: str) -> Dict[str, Any]:
         """

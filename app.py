@@ -86,7 +86,7 @@ async def startup(app):
         await conn.run_sync(Base.metadata.create_all)
 
     product_client = ProductServiceClient(base_url="http://localhost:5000/api/")
-    logistics_client = LogisticsServiceClient(base_url="http://localhost:8085/api/")
+    logistics_client = LogisticsServiceClient(base_url="http://localhost:8000/api/")
 
     address_service = AddressService(repository=app.extensions["address_repository"])
     order_service = OrderService(
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         from hypercorn.config import Config
 
         config = Config()
-        config.bind = ["0.0.0.0:8000"]
+        config.bind = ["0.0.0.0:3000"]
 
         asyncio.run(startup(app))
         try:
