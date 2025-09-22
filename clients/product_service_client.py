@@ -1,14 +1,25 @@
 import aiohttp
-from typing import Any, Dict
+import asyncio
+from typing import Any, Dict, Optional
 
 class ProductServiceClient:
     def __init__(self, base_url: str):
         self._base_url = base_url.rstrip("/")
-        self._session: aiohttp.ClientSession | None = None
+        self._session: Optional[aiohttp.ClientSession] = None
+        self._loop: Optional[asyncio.AbstractEventLoop] = None
 
     async def _get_session(self) -> aiohttp.ClientSession:
-        if self._session is None or self._session.closed:
+        loop = asyncio.get_running_loop()
+        if (
+            self._session is None
+            or self._session.closed
+            or self._loop is not loop
+        ):
+            # Close old session if it exists
+            if self._session and not self._session.closed:
+                await self._session.close()
             self._session = aiohttp.ClientSession()
+            self._loop = loop
         return self._session
 
     async def get_product(self, product_id: str) -> Dict[str, Any]:

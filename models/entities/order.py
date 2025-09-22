@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import List, Optional
-from sqlalchemy import DateTime, ForeignKey, Numeric, Enum
+from sqlalchemy import DateTime, ForeignKey, Numeric, Enum, String
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from models.entities.base import Base
@@ -21,9 +21,9 @@ class Order(Base):
 
     deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
-    customer_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)
+    customer_id: Mapped[str] = mapped_column(String(36), nullable=False)
 
-    shipment_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)
+    shipment_id: Mapped[str] = mapped_column(String(36), nullable=False)
 
     total_amount: Mapped[float] = mapped_column(Numeric(precision=18, scale=2), nullable=False)
 

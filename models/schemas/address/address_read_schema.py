@@ -2,6 +2,7 @@ from marshmallow import Schema, fields, validate
 
 class AddressReadSchema(Schema):
     id = fields.UUID(required=True)
+    customer_id = fields.UUID(required=True)
     street = fields.String(
         required=True,
         validate=validate.Length(max=100)

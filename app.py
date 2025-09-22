@@ -1,11 +1,10 @@
-from email.mime import base
+import asyncio
 from flask import Flask, g
 from flask_smorest import Api
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 # Blueprints
-from clients.logistics_service_client import LogisticsServiceClient
 from controllers import order_blp as OrderController, address_blp as AddressController
 
 # Repositories
@@ -22,16 +21,15 @@ from common.mapping.mapper_impl import Mapper
 # SQLAlchemy Base
 from models.entities.base import Base
 
-# Product Service Client
+# Clients
 from clients.product_service_client import ProductServiceClient
+from clients.logistics_service_client import LogisticsServiceClient
 
 DATABASE_URL = "sqlite+aiosqlite:///./order.db"
-
 
 def create_app():
     app = Flask(__name__)
 
-    # Swagger / OpenAPI config
     app.config.update(
         API_TITLE="Order API",
         API_VERSION="v1",
@@ -46,51 +44,22 @@ def create_app():
 
     # Async DB engine and session factory
     engine = create_async_engine(DATABASE_URL, echo=True, future=True)
-    async_session_factory = sessionmaker(
-        bind=engine,
-        class_=AsyncSession,
-        expire_on_commit=False
-    )
+    async_session_factory = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
-    # Shared mapper
     mapper = Mapper()
 
-    # Clients
-    product_client = ProductServiceClient(base_url = "http://localhost:5001/api/")
-    logistics_client = LogisticsServiceClient(base_url = "http://localhost:8085/api/")
-
-    # Dependency injection
-    
     address_repository = AddressRepository(session_factory=async_session_factory)
-    address_service = AddressService(repository=address_repository)
     order_repository = OrderRepository(session_factory=async_session_factory)
-    order_service = OrderService(repository=order_repository, address_repository=address_repository, product_client=product_client, logistics_client=logistics_client)
 
-
-    # Store in app.extensions for controller access
     app.extensions.update(
         engine=engine,
         session_factory=async_session_factory,
         mapper=mapper,
-        order_service=order_service,
-        address_service=address_service
+        address_repository=address_repository,
+        order_repository=order_repository
     )
 
-    # Run startup logic immediately when app is created
-    async def startup():
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-
-    import asyncio
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        asyncio.run(startup())  # normal app startup
-    else:
-        loop.create_task(startup())  # running inside pytest/ASGI
-
-
-    # Per-request session
+    # Per-request DB session
     @app.before_request
     async def create_session():
         g.db = async_session_factory()
@@ -111,17 +80,55 @@ def create_app():
     return app
 
 
+async def startup(app):
+    engine = app.extensions["engine"]
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    product_client = ProductServiceClient(base_url="http://localhost:5000/api/")
+    logistics_client = LogisticsServiceClient(base_url="http://localhost:8085/api/")
+
+    address_service = AddressService(repository=app.extensions["address_repository"])
+    order_service = OrderService(
+        repository=app.extensions["order_repository"],
+        address_repository=app.extensions["address_repository"],
+        product_client=product_client,
+        logistics_client=logistics_client
+    )
+
+    app.extensions.update(
+        product_client=product_client,
+        logistics_client=logistics_client,
+        address_service=address_service,
+        order_service=order_service
+    )
+
+
+async def shutdown(app):
+    await app.extensions["product_client"].close()
+    await app.extensions["logistics_client"].close()
+
+
 app = create_app()
 
 if __name__ == "__main__":
-    import asyncio
     try:
         from hypercorn.asyncio import serve
         from hypercorn.config import Config
 
         config = Config()
         config.bind = ["0.0.0.0:8000"]
-        asyncio.run(serve(app, config))
+
+        asyncio.run(startup(app))
+        try:
+            asyncio.run(serve(app, config))
+        finally:
+            asyncio.run(shutdown(app))
     except ImportError:
         print("Hypercorn not installed. Falling back to Flask dev server.")
-        app.run(debug=True)
+        # For dev server, you can still run startup manually
+        asyncio.run(startup(app))
+        try:
+            app.run(debug=True)
+        finally:
+            asyncio.run(shutdown(app))

@@ -12,8 +12,8 @@ class OrderReadDTO(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None
-    customer_id: uuid.UUID
-    shipment_id: uuid.UUID
+    customer_id: str
+    shipment_id: str
     total_amount: Decimal
     status: OrderStatus
     items: List[OrderItemReadDTO] = []

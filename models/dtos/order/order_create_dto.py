@@ -6,5 +6,5 @@ from models.dtos.order_item.order_item_create_dto import OrderItemCreateDTO
 
 
 class OrderCreateDTO(BaseModel):
-    customer_id: uuid.UUID
+    customer_id: str
     items: List[OrderItemCreateDTO]

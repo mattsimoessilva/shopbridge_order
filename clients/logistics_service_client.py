@@ -1,17 +1,33 @@
 import aiohttp
+import asyncio
 from typing import Any, Dict, Optional
 
 class LogisticsServiceClient:
     def __init__(self, base_url: str):
         self._base_url = base_url.rstrip("/")
         self._session: Optional[aiohttp.ClientSession] = None
+        self._loop: Optional[asyncio.AbstractEventLoop] = None
 
     async def _get_session(self) -> aiohttp.ClientSession:
-        if self._session is None or self._session.closed:
+        loop = asyncio.get_running_loop()
+        if (
+            self._session is None
+            or self._session.closed
+            or self._loop is not loop
+        ):
+            # Close old session if it exists
+            if self._session and not self._session.closed:
+                await self._session.close()
             self._session = aiohttp.ClientSession()
+            self._loop = loop
         return self._session
 
-    async def create_shipment(self, order_id: str, address: Dict[str, Any], package_details: Dict[str, Any]) -> Dict[str, Any]:
+    async def create_shipment(
+        self,
+        order_id: str,
+        address: Dict[str, Any],
+        package_details: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Create a shipment request.
         """
