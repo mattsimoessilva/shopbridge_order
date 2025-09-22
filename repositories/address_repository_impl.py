@@ -40,7 +40,7 @@ class AddressRepository(AddressRepositoryInterface):
             raise ValueError("Reference identifier cannot be empty.")
 
         result = await session.execute(
-            select(Address).where(Address.customer_id == id)
+            select(Address).where(Address.customer_id == customer_id)
         )
         return result.scalars().first()
 

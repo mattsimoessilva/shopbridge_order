@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 class AddressReadDTO(BaseModel):
     id: uuid.UUID
-    customer_id: uuid.UUID
+    customer_id: str
     street: str
     city: str
     state: str

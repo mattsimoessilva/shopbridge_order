@@ -13,7 +13,7 @@ class Address(Base):
         PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
 
-    customer_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)
+    customer_id: Mapped[str] = mapped_column(String(36), nullable=False)
     street: Mapped[str] = mapped_column(String(100), nullable=False)
     city: Mapped[str] = mapped_column(String(50), nullable=False)
     state: Mapped[str] = mapped_column(String(50), nullable=False)

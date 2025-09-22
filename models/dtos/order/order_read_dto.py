@@ -13,7 +13,7 @@ class OrderReadDTO(BaseModel):
     updated_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None
     customer_id: str
-    shipment_id: str
+    shipment_id: Optional[str] = None
     total_amount: Decimal
     status: OrderStatus
     items: List[OrderItemReadDTO] = []

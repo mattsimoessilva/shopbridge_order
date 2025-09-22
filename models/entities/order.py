@@ -23,7 +23,7 @@ class Order(Base):
 
     customer_id: Mapped[str] = mapped_column(String(36), nullable=False)
 
-    shipment_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    shipment_id: Mapped[str] = mapped_column(String(36), nullable=True)
 
     total_amount: Mapped[float] = mapped_column(Numeric(precision=18, scale=2), nullable=False)
 

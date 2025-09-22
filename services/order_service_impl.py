@@ -32,10 +32,12 @@ class OrderService(OrderServiceInterface):
         if isinstance(dto, dict):
             dto = OrderCreateDTO(**dto)
 
+        # Get product prices
         for item in dto.items:
             product_data = await self._product_client.get_product(item.product_id)
             item.unit_price = Decimal(product_data["price"])
 
+        # Prepare order entity (not yet saved)
         entity = Order(
             id=uuid.uuid4(),
             customer_id=dto.customer_id,
@@ -50,32 +52,45 @@ class OrderService(OrderServiceInterface):
                 for item in dto.items
             ]
         )
-        entity.total_amount = sum(Decimal(item.unit_price) * item.quantity for item in entity.items)
+        entity.total_amount = sum(
+            Decimal(item.unit_price) * item.quantity for item in entity.items
+        )
 
-        await self._repository.AddAsync(entity, session=session)
+        # Start transaction
+        async with session.begin():
+            # Check address before saving anything
+            address_entity = await self._address_repository.GetByCustomerIdAsync(
+                dto.customer_id, session=session
+            )
+            if not address_entity:
+                raise ValueError(f"No address found for customer {dto.customer_id}")
 
-        address_entity = await self._address_repository.GetByCustomerIdAsync(dto.customer_id, session=session)
-        if not address_entity:
-            raise ValueError(f"No address found for customer {dto.customer_id}")
+            # Try shipment creation first
+            shipment_payload = {
+                "orderId": str(entity.id),
+                "status": "Pending",
+                "dispatchDate": None,
+                "carrier": "DefaultCarrier",
+                "serviceLevel": "Standard",
+                "street": address_entity.street,
+                "city": address_entity.city,
+                "state": address_entity.state,
+                "postalCode": address_entity.postal_code,
+                "country": address_entity.country
+            }
 
-        shipment_payload = {
-            "orderId": str(entity.id),
-            "status": "Pending",  
-            "dispatchDate": None,  
-            "carrier": "DefaultCarrier",  
-            "serviceLevel": "Standard",   
-            "street": address_entity.street,
-            "city": address_entity.city,
-            "state": address_entity.state,
-            "postalCode": address_entity.postal_code,
-            "country": address_entity.country    
-        }
+            shipment_response = await self.logistics_client.create_shipment(**shipment_payload)
 
-        shipment_response = await self.logistics_client.create_shipment(**shipment_payload)
+            if not shipment_response or not shipment_response.get("id"):
+                raise RuntimeError("Shipment creation failed, order not saved.")
 
-        entity.shipment_id = shipment_response.get("id")
-        await self._repository.UpdateAsync(entity, session=session)
+            # Assign shipment ID
+            entity.shipment_id = shipment_response["id"]
 
+            # Now save the order
+            await self._repository.AddAsync(entity, session=session)
+
+        # Transaction commits here if no exception was raised
         return OrderReadDTO(
             id=entity.id,
             created_at=entity.created_at,
@@ -94,6 +109,7 @@ class OrderService(OrderServiceInterface):
                 for item in entity.items
             ]
         )
+
 
     async def GetAllAsync(self, session) -> List[OrderReadDTO]:
         entities = await self._repository.GetAllAsync(session=session)

@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 import uuid
 
 class AddressCreateDTO(BaseModel):
-    customer_id: uuid.UUID
+    customer_id: str
     street: str = Field(..., max_length=100)
     city: str = Field(..., max_length=50)
     state: str = Field(..., max_length=50)
