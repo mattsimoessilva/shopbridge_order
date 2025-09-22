@@ -58,34 +58,6 @@ class OrderService(OrderServiceInterface):
             Decimal(item.unit_price) * item.quantity for item in entity.items
         )
 
-        # Check address from DB
-        address_entity = await self._address_repository.GetByCustomerIdAsync(
-            dto.customer_id, session=session
-        )
-        if not address_entity:
-            raise ValueError(f"No address found for customer {dto.customer_id}")
-
-        # Call shipment API BEFORE saving
-        shipment_payload = {
-            "order_id": str(entity.id),
-            "status": "Pending",
-            "dispatchDate": None,
-            "carrier": "DefaultCarrier",
-            "serviceLevel": "Standard",
-            "street": address_entity.street,
-            "city": address_entity.city,
-            "state": address_entity.state,
-            "postalCode": address_entity.postal_code,
-            "country": address_entity.country
-        }
-
-        shipment_response = await self._logistics_client.create_shipment(**shipment_payload)
-        if not shipment_response or not shipment_response.get("id"):
-            raise RuntimeError("Shipment creation failed, order not saved.")
-
-        entity.shipment_id = shipment_response["id"]
-
-        # Save order only after all external calls succeed
         await self._repository.AddAsync(entity, session=session)
 
         return OrderReadDTO(
@@ -161,35 +133,52 @@ class OrderService(OrderServiceInterface):
         )
 
     async def UpdateAsync(self, dto: OrderUpdateDTO, session) -> bool:
-        if dto is None or not dto.id:
-            raise ValueError("Record data cannot be null or missing an identifier.")
         if isinstance(dto, dict):
             dto = OrderUpdateDTO(**dto)
+
+        if dto is None or not dto.id:
+            raise ValueError("Record data cannot be null or missing an identifier.")
 
         existing = await self._repository.GetByIdAsync(dto.id, session=session)
         if existing is None:
             return False
 
-        if dto.customer_id is not None:
-            existing.customer_id = dto.customer_id
         if dto.status is not None:
             existing.status = dto.status
-        if dto.items is not None:
-            existing.items = [
-                OrderItem(
-                    product_id=item.product_id,
-                    quantity=item.quantity,
-                    unit_price=item.unit_price
+
+            # Shipment creation trigger
+            if dto.status == OrderStatus.PROCESSING:
+                # Check address from DB
+                address_entity = await self._address_repository.GetByCustomerIdAsync(
+                    existing.customer_id, session=session
                 )
-                for item in dto.items
-            ]
-            existing.total_amount = sum(
-                Decimal(item.unit_price) * item.quantity for item in existing.items
-            )
+                if not address_entity:
+                    raise ValueError(f"No address found for customer {existing.customer_id}")
+
+                # Call shipment API BEFORE saving
+                shipment_payload = {
+                    "order_id": str(existing.id),
+                    "status": "Pending",
+                    "dispatchDate": None,
+                    "carrier": "DefaultCarrier",
+                    "serviceLevel": "Standard",
+                    "street": address_entity.street,
+                    "city": address_entity.city,
+                    "state": address_entity.state,
+                    "postalCode": address_entity.postal_code,
+                    "country": address_entity.country
+                }
+
+                shipment_response = await self._logistics_client.create_shipment(**shipment_payload)
+                if not shipment_response or not shipment_response.get("id"):
+                    raise RuntimeError("Shipment creation failed, order not saved.")
+
+                existing.shipment_id = shipment_response["id"]
 
         existing.updated_at = datetime.now(timezone.utc)
         await self._repository.UpdateAsync(existing, session=session)
         return True
+
 
     async def DeleteAsync(self, id: UUID, session) -> bool:
         if not id:

@@ -7,6 +7,4 @@ from models.dtos.order_item.order_item_update_dto import OrderItemUpdateDTO
 
 class OrderUpdateDTO(BaseModel):
     id: uuid.UUID
-    total_amount: Optional[condecimal(max_digits=18, decimal_places=2)] = None
     status: Optional[OrderStatus] = None
-    items: Optional[List[OrderItemUpdateDTO]] = None
