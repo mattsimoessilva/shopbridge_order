@@ -48,15 +48,34 @@ def create_app():
 
     mapper = Mapper()
 
+    # Repositories
     address_repository = AddressRepository(session_factory=async_session_factory)
     order_repository = OrderRepository(session_factory=async_session_factory)
 
+    # Clients
+    product_client = ProductServiceClient(base_url="http://localhost:5000/api/")
+    logistics_client = LogisticsServiceClient(base_url="http://localhost:8000/api/")
+
+    # Services
+    address_service = AddressService(repository=address_repository)
+    order_service = OrderService(
+        repository=order_repository,
+        address_repository=address_repository,
+        product_client=product_client,
+        logistics_client=logistics_client
+    )
+
+    # Store everything in app.extensions so routes can access them
     app.extensions.update(
         engine=engine,
         session_factory=async_session_factory,
         mapper=mapper,
         address_repository=address_repository,
-        order_repository=order_repository
+        order_repository=order_repository,
+        product_client=product_client,
+        logistics_client=logistics_client,
+        address_service=address_service,
+        order_service=order_service
     )
 
     # Per-request DB session
@@ -78,6 +97,7 @@ def create_app():
     api.register_blueprint(AddressController)
 
     return app
+
 
 
 async def startup(app):
