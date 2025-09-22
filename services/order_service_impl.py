@@ -13,20 +13,24 @@ from models.entities.order_item import OrderItem
 from models.enums.order_status import OrderStatus
 from repositories.interfaces.order_repository_interface import OrderRepositoryInterface
 from services.interfaces.order_service_interface import OrderServiceInterface
-from common.mapping.mapper_interface import MapperInterface
+from clients.product_service_client import ProductServiceClient
 
 
 class OrderService(OrderServiceInterface):
 
-    def __init__(self, repository: OrderRepositoryInterface, mapper: MapperInterface):
+    def __init__(self, repository: OrderRepositoryInterface, product_client: ProductServiceClient):
         self._repository = repository
-        self._mapper = mapper
+        self._product_client = product_client
 
     async def CreateAsync(self, dto: OrderCreateDTO, session) -> OrderReadDTO:
         if dto is None:
             raise ValueError("Record data cannot be null.")
         if isinstance(dto, dict):
             dto = OrderCreateDTO(**dto)
+
+        for item in dto.items:
+            product_data = await self._product_client.get_product(item.product_id)
+            item.unit_price = Decimal(product_data["price"])
 
         entity = Order(
             id=uuid.uuid4(),

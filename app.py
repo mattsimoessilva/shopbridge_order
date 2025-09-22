@@ -20,6 +20,9 @@ from common.mapping.mapper_impl import Mapper
 # SQLAlchemy Base
 from models.entities.base import Base
 
+# Product Service Client
+from clients.product_service_client import ProductServiceClient
+
 DATABASE_URL = "sqlite+aiosqlite:///./order.db"
 
 
@@ -50,11 +53,14 @@ def create_app():
     # Shared mapper
     mapper = Mapper()
 
+    # Clients
+    product_client = ProductServiceClient(base_url = "http://localhost:5001/api/")
+
     # Dependency injection
-    order_repository = OrderRepository(session_factory=async_session_factory, mapper=mapper)
-    order_service = OrderService(repository=order_repository, mapper=mapper)
-    address_repository = AddressRepository(session_factory=async_session_factory, mapper=mapper)
-    address_service = AddressService(repository=address_repository, mapper=mapper)
+    order_repository = OrderRepository(session_factory=async_session_factory)
+    order_service = OrderService(repository=order_repository, product_client=product_client)
+    address_repository = AddressRepository(session_factory=async_session_factory)
+    address_service = AddressService(repository=address_repository)
 
     # Store in app.extensions for controller access
     app.extensions.update(

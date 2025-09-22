@@ -13,9 +13,8 @@ from common.mapping.mapper_interface import MapperInterface
 
 class AddressService(AddressServiceInterface):
 
-    def __init__(self, repository: AddressRepositoryInterface, mapper: MapperInterface):
+    def __init__(self, repository: AddressRepositoryInterface):
         self._repository = repository
-        self._mapper = mapper
 
     async def CreateAsync(self, dto: AddressCreateDTO, session) -> AddressReadDTO:
         if dto is None:

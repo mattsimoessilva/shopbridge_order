@@ -13,9 +13,8 @@ from common.mapping.mapper_interface import MapperInterface
 
 class AddressRepository(AddressRepositoryInterface):
 
-    def __init__(self, session_factory, mapper):
+    def __init__(self, session_factory):
         self._session_factory = session_factory
-        self._mapper = mapper
 
 
     async def AddAsync(self, entity: Address, session: AsyncSession) -> Address:
