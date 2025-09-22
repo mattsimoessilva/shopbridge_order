@@ -11,16 +11,15 @@ from models.dtos.address.address_update_dto import AddressUpdateDTO
 @pytest.fixture
 def service_with_mocks():
     repo_mock = AsyncMock()
-    mapper_mock = MagicMock()
-    service = AddressService(repo_mock, mapper_mock)
-    return service, repo_mock, mapper_mock
+    service = AddressService(repo_mock)
+    return service, repo_mock
 
 
 # region CreateAsync Method.
 
 @pytest.mark.asyncio
 async def test_CreateAsync_ShouldRaiseValueError_WhenDTOIsNone(service_with_mocks):
-    service, repo_mock, _ = service_with_mocks
+    service, repo_mock = service_with_mocks
 
     with pytest.raises(ValueError) as exc_info:
         await service.CreateAsync(None, session="session")
@@ -30,7 +29,7 @@ async def test_CreateAsync_ShouldRaiseValueError_WhenDTOIsNone(service_with_mock
 
 @pytest.mark.asyncio
 async def test_CreateAsync_ShouldReturnDTO_WhenDTOIsValid(service_with_mocks):
-    service, repo_mock, _ = service_with_mocks
+    service, repo_mock = service_with_mocks
     create_dto = AddressCreateDTO(
         street="123 Main St", city="NY", state="NY", postal_code="10001", country="USA"
     )
@@ -47,7 +46,7 @@ async def test_CreateAsync_ShouldReturnDTO_WhenDTOIsValid(service_with_mocks):
 
 @pytest.mark.asyncio
 async def test_CreateAsync_ShouldRaiseException_WhenRepositoryFails(service_with_mocks):
-    service, repo_mock, _ = service_with_mocks
+    service, repo_mock = service_with_mocks
     create_dto = AddressCreateDTO(
         street="123 Main St", city="NY", state="NY", postal_code="10001", country="USA"
     )
@@ -65,7 +64,7 @@ async def test_CreateAsync_ShouldRaiseException_WhenRepositoryFails(service_with
 
 @pytest.mark.asyncio
 async def test_GetAllAsync_ShouldReturnList_WhenRecordsExist(service_with_mocks):
-    service, repo_mock, _ = service_with_mocks
+    service, repo_mock = service_with_mocks
     addr1 = Address(
         id=uuid.uuid4(),
         street="123 Main St",
@@ -96,7 +95,7 @@ async def test_GetAllAsync_ShouldReturnList_WhenRecordsExist(service_with_mocks)
 
 @pytest.mark.asyncio
 async def test_GetAllAsync_ShouldReturnEmptyList_WhenNoRecordsExist(service_with_mocks):
-    service, repo_mock, _ = service_with_mocks
+    service, repo_mock = service_with_mocks
     repo_mock.GetAllAsync.return_value = None
 
     result = await service.GetAllAsync(session="session")
@@ -111,7 +110,7 @@ async def test_GetAllAsync_ShouldReturnEmptyList_WhenNoRecordsExist(service_with
 
 @pytest.mark.asyncio
 async def test_GetByIdAsync_ShouldRaiseValueError_WhenIdIsEmpty(service_with_mocks):
-    service, _, _ = service_with_mocks
+    service, _ = service_with_mocks
 
     with pytest.raises(ValueError) as exc_info:
         await service.GetByIdAsync(None, session="session")
@@ -120,7 +119,7 @@ async def test_GetByIdAsync_ShouldRaiseValueError_WhenIdIsEmpty(service_with_moc
 
 @pytest.mark.asyncio
 async def test_GetByIdAsync_ShouldReturnDTO_WhenRecordExists(service_with_mocks):
-    service, repo_mock, _ = service_with_mocks
+    service, repo_mock = service_with_mocks
     address_id = uuid.uuid4()
     entity = Address(
         id=address_id,
@@ -142,7 +141,7 @@ async def test_GetByIdAsync_ShouldReturnDTO_WhenRecordExists(service_with_mocks)
 
 @pytest.mark.asyncio
 async def test_GetByIdAsync_ShouldReturnNone_WhenRecordDoesNotExist(service_with_mocks):
-    service, repo_mock, _ = service_with_mocks
+    service, repo_mock = service_with_mocks
     address_id = uuid.uuid4()
     repo_mock.GetByIdAsync.return_value = None
 
@@ -158,7 +157,7 @@ async def test_GetByIdAsync_ShouldReturnNone_WhenRecordDoesNotExist(service_with
 
 @pytest.mark.asyncio
 async def test_UpdateAsync_ShouldRaiseValueError_WhenDTOIsInvalid(service_with_mocks):
-    service, _, _ = service_with_mocks
+    service, _ = service_with_mocks
 
     with pytest.raises(ValueError) as exc_info:
         await service.UpdateAsync(None, session="session")
@@ -167,7 +166,7 @@ async def test_UpdateAsync_ShouldRaiseValueError_WhenDTOIsInvalid(service_with_m
 
 @pytest.mark.asyncio
 async def test_UpdateAsync_ShouldReturnFalse_WhenRecordDoesNotExist(service_with_mocks):
-    service, repo_mock, _ = service_with_mocks
+    service, repo_mock = service_with_mocks
     dto = AddressUpdateDTO(
         id=uuid.uuid4(),
         street="123 Main St",
@@ -186,7 +185,7 @@ async def test_UpdateAsync_ShouldReturnFalse_WhenRecordDoesNotExist(service_with
 
 @pytest.mark.asyncio
 async def test_UpdateAsync_ShouldReturnTrue_WhenUpdateSucceeds(service_with_mocks):
-    service, repo_mock, _ = service_with_mocks
+    service, repo_mock = service_with_mocks
     dto = AddressUpdateDTO(
         id=uuid.uuid4(),
         street="123 Main St",
@@ -212,7 +211,7 @@ async def test_UpdateAsync_ShouldReturnTrue_WhenUpdateSucceeds(service_with_mock
 
 @pytest.mark.asyncio
 async def test_DeleteAsync_ShouldRaiseValueError_WhenIdIsEmpty(service_with_mocks):
-    service, _, _ = service_with_mocks
+    service, _ = service_with_mocks
 
     with pytest.raises(ValueError) as exc_info:
         await service.DeleteAsync(None, session="session")
@@ -221,7 +220,7 @@ async def test_DeleteAsync_ShouldRaiseValueError_WhenIdIsEmpty(service_with_mock
 
 @pytest.mark.asyncio
 async def test_DeleteAsync_ShouldReturnTrue_WhenRecordIsDeleted(service_with_mocks):
-    service, repo_mock, _ = service_with_mocks
+    service, repo_mock = service_with_mocks
     address_id = uuid.uuid4()
     repo_mock.DeleteAsync.return_value = True
 
@@ -233,7 +232,7 @@ async def test_DeleteAsync_ShouldReturnTrue_WhenRecordIsDeleted(service_with_moc
 
 @pytest.mark.asyncio
 async def test_DeleteAsync_ShouldReturnFalse_WhenRecordDoesNotExist(service_with_mocks):
-    service, repo_mock, _ = service_with_mocks
+    service, repo_mock = service_with_mocks
     address_id = uuid.uuid4()
     repo_mock.DeleteAsync.return_value = False
 

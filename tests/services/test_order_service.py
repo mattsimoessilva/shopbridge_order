@@ -2,28 +2,28 @@ import pytest
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 from services.order_service_impl import OrderService
 from models.entities.order import Order
-from models.entities.order_item import OrderItem
 from models.dtos.order.order_create_dto import OrderCreateDTO
 from models.dtos.order.order_update_dto import OrderUpdateDTO
+from models.dtos.order_item.order_item_create_dto import OrderItemCreateDTO
 from models.enums.order_status import OrderStatus
 
 
 @pytest.fixture
 def service_with_mocks():
     repo_mock = AsyncMock()
-    mapper_mock = MagicMock()
-    service = OrderService(repo_mock, mapper_mock)
-    return service, repo_mock, mapper_mock
+    product_client_mock = AsyncMock()
+    service = OrderService(repo_mock, product_client_mock)
+    return service, repo_mock, product_client_mock
 
 
 # region CreateAsync Method.
 
 @pytest.mark.asyncio
 async def test_CreateAsync_ShouldRaiseValueError_WhenDTOIsNone(service_with_mocks):
-    service, repo_mock, mapper_mock = service_with_mocks
+    service, repo_mock, _ = service_with_mocks
 
     with pytest.raises(ValueError) as exc_info:
         await service.CreateAsync(None, session="session")
@@ -32,25 +32,64 @@ async def test_CreateAsync_ShouldRaiseValueError_WhenDTOIsNone(service_with_mock
 
 
 @pytest.mark.asyncio
-async def test_CreateAsync_ShouldReturnDTO_WhenDTOIsValid(service_with_mocks):
-    service, repo_mock, _ = service_with_mocks
-    create_dto = OrderCreateDTO(customer_id=uuid.uuid4(), items=[])
-    # Simulate repository AddAsync doing nothing special
+async def test_CreateAsync_ShouldReturnDTO_WhenDTOIsValid_NoItems(service_with_mocks):
+    service, repo_mock, product_client_mock = service_with_mocks
+    create_dto = OrderCreateDTO(customer_id=uuid.uuid4(), items=[])  # no items
+
     repo_mock.AddAsync.return_value = None
 
     result = await service.CreateAsync(create_dto, session="session")
 
     assert isinstance(result.id, uuid.UUID)
     assert result.customer_id == create_dto.customer_id
-    assert result.status == OrderStatus.PENDING.value
+    assert result.status == OrderStatus.PENDING
     assert result.total_amount == 0
     repo_mock.AddAsync.assert_awaited_once()
-    
+    product_client_mock.get_product.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_CreateAsync_ShouldReturnDTO_WhenDTOIsValid_WithItems(service_with_mocks):
+    service, repo_mock, product_client_mock = service_with_mocks
+    product_id = uuid.uuid4()
+    create_dto = OrderCreateDTO(
+        customer_id=uuid.uuid4(),
+        items=[OrderItemCreateDTO(product_id=product_id, quantity=2, unit_price=None)]
+    )
+
+    product_client_mock.get_product.return_value = {"price": "99.99"}
+    repo_mock.AddAsync.return_value = None
+
+    result = await service.CreateAsync(create_dto, session="session")
+
+    assert result.total_amount == Decimal("199.98")
+    product_client_mock.get_product.assert_awaited_once_with(product_id)
+    repo_mock.AddAsync.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_CreateAsync_ShouldAcceptDictDTO(service_with_mocks):
+    service, repo_mock, product_client_mock = service_with_mocks
+    product_id = uuid.uuid4()
+    dto_dict = {
+        "customer_id": uuid.uuid4(),
+        "items": [{"product_id": product_id, "quantity": 1, "unit_price": None}]
+    }
+
+    product_client_mock.get_product.return_value = {"price": "50.00"}
+    repo_mock.AddAsync.return_value = None
+
+    result = await service.CreateAsync(dto_dict, session="session")
+
+    assert result.total_amount == Decimal("50.00")
+    product_client_mock.get_product.assert_awaited_once_with(product_id)
+    repo_mock.AddAsync.assert_awaited_once()
 
 @pytest.mark.asyncio
 async def test_CreateAsync_ShouldRaiseException_WhenRepositoryFails(service_with_mocks):
     service, repo_mock, _ = service_with_mocks
-    create_dto = OrderCreateDTO(customer_id=uuid.uuid4(), items=[])
+    create_dto = OrderCreateDTO(customer_id=uuid.uuid4(), items=[])  # no items
+
     repo_mock.AddAsync.side_effect = Exception("Repository failure.")
 
     with pytest.raises(Exception) as exc_info:
@@ -176,7 +215,7 @@ async def test_UpdateAsync_ShouldReturnFalse_WhenRecordDoesNotExist(service_with
 
 @pytest.mark.asyncio
 async def test_UpdateAsync_ShouldReturnTrue_WhenUpdateSucceeds(service_with_mocks):
-    service, repo_mock, mapper_mock = service_with_mocks
+    service, repo_mock, _ = service_with_mocks
     dto = OrderUpdateDTO(id=uuid.uuid4(), customer_id=uuid.uuid4(), items=[])
     existing = Order()
     repo_mock.GetByIdAsync.return_value = existing
@@ -186,7 +225,6 @@ async def test_UpdateAsync_ShouldReturnTrue_WhenUpdateSucceeds(service_with_mock
     assert result is True
     assert existing.customer_id == dto.customer_id
     repo_mock.UpdateAsync.assert_awaited_once_with(existing, session="session")
-
 
 # endregion
 
@@ -224,5 +262,3 @@ async def test_DeleteAsync_ShouldReturnFalse_WhenRecordDoesNotExist(service_with
 
     assert result is False
     repo_mock.DeleteAsync.assert_awaited_once_with(order_id, session="session")
-
-# endregion

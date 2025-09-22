@@ -1,5 +1,3 @@
-# repositories/address_repository.py
-
 from typing import List, Optional
 from uuid import UUID
 
@@ -8,14 +6,12 @@ from sqlalchemy.future import select
 
 from models.entities.address import Address
 from repositories.interfaces.address_repository_interface import AddressRepositoryInterface
-from common.mapping.mapper_interface import MapperInterface
 
 
 class AddressRepository(AddressRepositoryInterface):
 
     def __init__(self, session_factory):
         self._session_factory = session_factory
-
 
     async def AddAsync(self, entity: Address, session: AsyncSession) -> Address:
         if entity is None:
@@ -24,7 +20,6 @@ class AddressRepository(AddressRepositoryInterface):
         session.add(entity)
         await session.commit()
         await session.refresh(entity)
-
         return entity
 
     async def GetAllAsync(self, session: AsyncSession) -> List[Address]:
@@ -48,9 +43,7 @@ class AddressRepository(AddressRepositoryInterface):
         if existing is None:
             return False
 
-        self._mapper.map(updated, existing)
         await session.commit()
-
         return True
 
     async def DeleteAsync(self, id: UUID, session: AsyncSession) -> bool:
@@ -63,5 +56,4 @@ class AddressRepository(AddressRepositoryInterface):
 
         await session.delete(existing)
         await session.commit()
-
         return True
