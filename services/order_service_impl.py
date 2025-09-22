@@ -18,41 +18,48 @@ from services.interfaces.order_service_interface import OrderServiceInterface
 from clients.product_service_client import ProductServiceClient
 from clients.logistics_service_client import LogisticsServiceClient
 
+
 class OrderService(OrderServiceInterface):
 
-    def __init__(self, repository: OrderRepositoryInterface, address_repository: AddressRepositoryInterface, product_client: ProductServiceClient, logistics_client: LogisticsServiceClient):
+    def __init__(
+        self,
+        repository: OrderRepositoryInterface,
+        address_repository: AddressRepositoryInterface,
+        product_client: ProductServiceClient,
+        logistics_client: LogisticsServiceClient
+    ):
         self._repository = repository
         self._address_repository = address_repository
         self._product_client = product_client
         self._logistics_client = logistics_client
 
+
     async def CreateAsync(self, dto: OrderCreateDTO, session) -> OrderReadDTO:
         if dto is None:
             raise ValueError("Record data cannot be null.")
+
         if isinstance(dto, dict):
             dto = OrderCreateDTO(**dto)
 
-        # Get product prices from external API and reserve stock
         for item in dto.items:
             if item.product_variant_id:
                 product_data = await self._product_client.get_variant(item.product_variant_id)
+
                 if not product_data:
                     raise RuntimeError(f"Product Variant {item.product_variant_id} not found.")
-                item.unit_price = Decimal(product_data["price"])
 
-                # Reserve variant stock
+                item.unit_price = Decimal(product_data["price"])
                 await self._product_client.reserve_variant_stock(item.product_variant_id, item.quantity)
 
             else:
                 product_data = await self._product_client.get_product(item.product_id)
+
                 if not product_data:
                     raise RuntimeError(f"Product {item.product_id} not found.")
-                item.unit_price = Decimal(product_data["price"])
 
-                # Reserve product stock
+                item.unit_price = Decimal(product_data["price"])
                 await self._product_client.reserve_product_stock(item.product_id, item.quantity)
 
-        # Prepare order entity (not yet saved)
         entity = Order(
             id=uuid.uuid4(),
             customer_id=dto.customer_id,
@@ -69,15 +76,12 @@ class OrderService(OrderServiceInterface):
             ]
         )
 
-        # Calculate total amount
         entity.total_amount = sum(
             Decimal(item.unit_price) * item.quantity for item in entity.items
         )
 
-        # Save to DB
         await self._repository.AddAsync(entity, session=session)
 
-        # Return read DTO
         return OrderReadDTO(
             id=entity.id,
             created_at=entity.created_at,
@@ -101,8 +105,10 @@ class OrderService(OrderServiceInterface):
 
     async def GetAllAsync(self, session) -> List[OrderReadDTO]:
         entities = await self._repository.GetAllAsync(session=session)
+
         if not entities:
             return []
+
         return [
             OrderReadDTO(
                 id=e.id,
@@ -126,11 +132,13 @@ class OrderService(OrderServiceInterface):
             for e in entities
         ]
 
+
     async def GetByIdAsync(self, id: UUID, session) -> Optional[OrderReadDTO]:
         if not id:
             raise ValueError("Record identifier cannot be empty.")
 
         entity = await self._repository.GetByIdAsync(id, session=session)
+
         if entity is None:
             return None
 
@@ -154,6 +162,7 @@ class OrderService(OrderServiceInterface):
             ]
         )
 
+
     async def UpdateAsync(self, dto: OrderUpdateDTO, session) -> bool:
         if isinstance(dto, dict):
             dto = OrderUpdateDTO(**dto)
@@ -162,15 +171,14 @@ class OrderService(OrderServiceInterface):
             raise ValueError("Record data cannot be null or missing an identifier.")
 
         existing = await self._repository.GetByIdAsync(dto.id, session=session)
+
         if existing is None:
             return False
 
         if dto.status is not None:
             existing.status = dto.status
 
-            # Handle stock changes based on status transitions
             if dto.status == OrderStatus.CANCELLED:
-                # Release reserved stock
                 for item in existing.items:
                     if item.product_variant_id:
                         await self._product_client.release_variant_stock(item.product_variant_id, item.quantity)
@@ -178,23 +186,20 @@ class OrderService(OrderServiceInterface):
                         await self._product_client.release_product_stock(item.product_id, item.quantity)
 
             elif dto.status == OrderStatus.COMPLETED:
-                # Deduct final stock (reduce reserved + total)
                 for item in existing.items:
                     if item.product_variant_id:
                         await self._product_client.reduce_variant_stock(item.product_variant_id, item.quantity)
                     else:
                         await self._product_client.reduce_product_stock(item.product_id, item.quantity)
 
-            # Shipment creation trigger
             if dto.status == OrderStatus.PROCESSING:
-                # Check address from DB
                 address_entity = await self._address_repository.GetByCustomerIdAsync(
                     existing.customer_id, session=session
                 )
+
                 if not address_entity:
                     raise ValueError(f"No address found for customer {existing.customer_id}")
 
-                # Call shipment API BEFORE saving
                 shipment_payload = {
                     "order_id": str(existing.id),
                     "status": "Pending",
@@ -209,17 +214,21 @@ class OrderService(OrderServiceInterface):
                 }
 
                 shipment_response = await self._logistics_client.create_shipment(**shipment_payload)
+
                 if not shipment_response or not shipment_response.get("id"):
                     raise RuntimeError("Shipment creation failed, order not saved.")
 
                 existing.shipment_id = shipment_response["id"]
 
         existing.updated_at = datetime.now(timezone.utc)
+
         await self._repository.UpdateAsync(existing, session=session)
+
         return True
 
 
     async def DeleteAsync(self, id: UUID, session) -> bool:
         if not id:
             raise ValueError("Record identifier cannot be empty.")
+
         return await self._repository.DeleteAsync(id, session=session)
