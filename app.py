@@ -1,9 +1,11 @@
+from email.mime import base
 from flask import Flask, g
 from flask_smorest import Api
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 # Blueprints
+from clients.logistics_service_client import LogisticsServiceClient
 from controllers import order_blp as OrderController, address_blp as AddressController
 
 # Repositories
@@ -55,12 +57,15 @@ def create_app():
 
     # Clients
     product_client = ProductServiceClient(base_url = "http://localhost:5001/api/")
+    logistics_client = LogisticsServiceClient(base_url = "http://localhost:8085/api/")
 
     # Dependency injection
-    order_repository = OrderRepository(session_factory=async_session_factory)
-    order_service = OrderService(repository=order_repository, product_client=product_client)
+    
     address_repository = AddressRepository(session_factory=async_session_factory)
     address_service = AddressService(repository=address_repository)
+    order_repository = OrderRepository(session_factory=async_session_factory)
+    order_service = OrderService(repository=order_repository, address_repository=address_repository, product_client=product_client, logistics_client=logistics_client)
+
 
     # Store in app.extensions for controller access
     app.extensions.update(

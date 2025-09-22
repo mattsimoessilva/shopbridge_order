@@ -24,6 +24,7 @@ class AddressService(AddressServiceInterface):
 
         entity = Address(
             id=uuid4(),
+            customer_id=dto.customer_id,
             street=dto.street,
             city=dto.city,
             state=dto.state,
@@ -36,6 +37,7 @@ class AddressService(AddressServiceInterface):
 
         return AddressReadDTO(
             id=entity.id,
+            customer_id=entity.customer_id,
             street=entity.street,
             city=entity.city,
             state=entity.state,
@@ -53,6 +55,7 @@ class AddressService(AddressServiceInterface):
         return [
             AddressReadDTO(
                 id=e.id,
+                customer_id=e.customer_id,
                 street=e.street,
                 city=e.city,
                 state=e.state,
@@ -75,6 +78,7 @@ class AddressService(AddressServiceInterface):
 
         return AddressReadDTO(
             id=entity.id,
+            customer_id=e.customer_id,
             street=entity.street,
             city=entity.city,
             state=entity.state,

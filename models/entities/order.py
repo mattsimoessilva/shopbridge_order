@@ -23,6 +23,8 @@ class Order(Base):
 
     customer_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)
 
+    shipment_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)
+
     total_amount: Mapped[float] = mapped_column(Numeric(precision=18, scale=2), nullable=False)
 
     status: Mapped[OrderStatus] = mapped_column(Enum(OrderStatus, name="order_status"), nullable=False)

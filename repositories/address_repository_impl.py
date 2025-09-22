@@ -35,6 +35,15 @@ class AddressRepository(AddressRepositoryInterface):
         )
         return result.scalars().first()
 
+    async def GetByCustomerIdAsync(self, customer_id: UUID, session: AsyncSession) -> Optional[Address]:
+        if not customer_id:
+            raise ValueError("Reference identifier cannot be empty.")
+
+        result = await session.execute(
+            select(Address).where(Address.customer_id == id)
+        )
+        return result.scalars().first()
+
     async def UpdateAsync(self, updated: Address, session: AsyncSession) -> bool:
         if updated is None:
             raise ValueError("Record data cannot be null.")

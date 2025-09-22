@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import List, Optional
 from uuid import UUID
 
+from controllers import address_blp
 from models.dtos.order.order_create_dto import OrderCreateDTO
 from models.dtos.order.order_read_dto import OrderReadDTO
 from models.dtos.order.order_update_dto import OrderUpdateDTO
@@ -11,16 +12,19 @@ from models.dtos.order_item.order_item_read_dto import OrderItemReadDTO
 from models.entities.order import Order
 from models.entities.order_item import OrderItem
 from models.enums.order_status import OrderStatus
+from repositories.address_repository_impl import AddressRepositoryInterface
 from repositories.interfaces.order_repository_interface import OrderRepositoryInterface
 from services.interfaces.order_service_interface import OrderServiceInterface
 from clients.product_service_client import ProductServiceClient
-
+from clients.logistics_service_client import LogisticsServiceClient
 
 class OrderService(OrderServiceInterface):
 
-    def __init__(self, repository: OrderRepositoryInterface, product_client: ProductServiceClient):
+    def __init__(self, repository: OrderRepositoryInterface, address_repository: AddressRepositoryInterface, product_client: ProductServiceClient, logistics_client: LogisticsServiceClient):
         self._repository = repository
+        self._address_repository = address_repository
         self._product_client = product_client
+        self._logistics_client = logistics_client
 
     async def CreateAsync(self, dto: OrderCreateDTO, session) -> OrderReadDTO:
         if dto is None:
@@ -50,10 +54,33 @@ class OrderService(OrderServiceInterface):
 
         await self._repository.AddAsync(entity, session=session)
 
+        address_entity = await self._address_repository.GetByCustomerIdAsync(dto.customer_id, session=session)
+        if not address_entity:
+            raise ValueError(f"No address found for customer {dto.customer_id}")
+
+        shipment_payload = {
+            "orderId": str(entity.id),
+            "status": "Pending",  
+            "dispatchDate": None,  
+            "carrier": "DefaultCarrier",  
+            "serviceLevel": "Standard",   
+            "street": address_entity.street,
+            "city": address_entity.city,
+            "state": address_entity.state,
+            "postalCode": address_entity.postal_code,
+            "country": address_entity.country    
+        }
+
+        shipment_response = await self.logistics_client.create_shipment(**shipment_payload)
+
+        entity.shipment_id = shipment_response.get("id")
+        await self._repository.UpdateAsync(entity, session=session)
+
         return OrderReadDTO(
             id=entity.id,
             created_at=entity.created_at,
             customer_id=entity.customer_id,
+            shipment_id=entity.shipment_id,
             total_amount=entity.total_amount,
             status=entity.status,
             items=[
@@ -77,6 +104,7 @@ class OrderService(OrderServiceInterface):
                 id=e.id,
                 created_at=e.created_at,
                 customer_id=e.customer_id,
+                shipment_id=e.shipment_id,
                 total_amount=e.total_amount,
                 status=e.status,
                 items=[
@@ -105,6 +133,7 @@ class OrderService(OrderServiceInterface):
             id=entity.id,
             created_at=entity.created_at,
             customer_id=entity.customer_id,
+            shipment_id=entity.shipment_id,
             total_amount=entity.total_amount,
             status=entity.status,
             items=[

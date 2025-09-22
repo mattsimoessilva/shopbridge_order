@@ -22,6 +22,11 @@ class AddressRepositoryInterface(ABC):
         pass
 
     @abstractmethod
+    async def GetByCustomerIdAsync(self, customer_id: UUID) -> Optional[Address]:
+        """Retrive a single Address entity by its customer_id field"""
+        pass
+
+    @abstractmethod
     async def UpdateAsync(self, address: Address) -> bool:
         """Update an existing Address entity. Returns True if successful."""
         pass
