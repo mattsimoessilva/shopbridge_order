@@ -12,7 +12,7 @@ class OrderReadDTO(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None
-    customer_id: str
+    customer_id: uuid.UUID
     shipment_id: Optional[str] = None
     total_amount: Decimal
     status: OrderStatus

@@ -6,13 +6,15 @@ VALID_ADDRESS_ID = str(uuid.uuid4())
 ANOTHER_ADDRESS_ID = str(uuid.uuid4())
 NON_EXISTENT_ADDRESS_ID = str(uuid.uuid4())
 
-# region Create Method
+
+# region Create Method.
 
 @pytest.mark.asyncio
-async def test_Create_ShouldReturn201_WhenRecordIsCreated(client_with_mocked_address_service):
+async def test_Create_ShouldReturnCreatedAtAction_WhenRecordIsCreated(client_with_mocked_address_service):
     # Arrange
     client, mock_service = client_with_mocked_address_service
     dto = {
+        "customer_id": str(uuid.uuid4()),
         "street": "123 Main St",
         "city": "New York",
         "state": "NY",
@@ -32,10 +34,11 @@ async def test_Create_ShouldReturn201_WhenRecordIsCreated(client_with_mocked_add
 
 # endregion
 
-# region GetAll Method
+
+# region GetAll Method.
 
 @pytest.mark.asyncio
-async def test_GetAll_ShouldReturn200_WithRecordList(client_with_mocked_address_service):
+async def test_GetAll_ShouldReturnOk_WithRecordList(client_with_mocked_address_service):
     # Arrange
     client, mock_service = client_with_mocked_address_service
     entities = [
@@ -68,7 +71,7 @@ async def test_GetAll_ShouldReturn200_WithRecordList(client_with_mocked_address_
 
 
 @pytest.mark.asyncio
-async def test_GetAll_ShouldReturn200_WithEmptyList(client_with_mocked_address_service):
+async def test_GetAll_ShouldReturnOk_WithEmptyList(client_with_mocked_address_service):
     # Arrange
     client, mock_service = client_with_mocked_address_service
     mock_service.GetAllAsync.return_value = []
@@ -83,10 +86,11 @@ async def test_GetAll_ShouldReturn200_WithEmptyList(client_with_mocked_address_s
 
 # endregion
 
-# region GetById Method
+
+# region GetById Method.
 
 @pytest.mark.asyncio
-async def test_GetById_ShouldReturn200_WhenRecordExists(client_with_mocked_address_service):
+async def test_GetById_ShouldReturnOk_WhenRecordExists(client_with_mocked_address_service):
     # Arrange
     client, mock_service = client_with_mocked_address_service
     entity = {
@@ -109,7 +113,7 @@ async def test_GetById_ShouldReturn200_WhenRecordExists(client_with_mocked_addre
 
 
 @pytest.mark.asyncio
-async def test_GetById_ShouldReturn404_WhenRecordDoesNotExist(client_with_mocked_address_service):
+async def test_GetById_ShouldReturnNotFound_WhenRecordDoesNotExist(client_with_mocked_address_service):
     # Arrange
     client, mock_service = client_with_mocked_address_service
     mock_service.GetByIdAsync.return_value = None
@@ -123,10 +127,11 @@ async def test_GetById_ShouldReturn404_WhenRecordDoesNotExist(client_with_mocked
 
 # endregion
 
-# region Update Method
+
+# region Update Method.
 
 @pytest.mark.asyncio
-async def test_Update_ShouldReturn200_WhenUpdateSucceeds(client_with_mocked_address_service):
+async def test_Update_ShouldReturnOk_WhenUpdateSucceeds(client_with_mocked_address_service):
     # Arrange
     client, mock_service = client_with_mocked_address_service
     dto = {
@@ -148,7 +153,7 @@ async def test_Update_ShouldReturn200_WhenUpdateSucceeds(client_with_mocked_addr
 
 
 @pytest.mark.asyncio
-async def test_Update_ShouldReturn404_WhenUpdateFails(client_with_mocked_address_service):
+async def test_Update_ShouldReturnNotFound_WhenUpdateFails(client_with_mocked_address_service):
     # Arrange
     client, mock_service = client_with_mocked_address_service
     dto = {
@@ -170,10 +175,11 @@ async def test_Update_ShouldReturn404_WhenUpdateFails(client_with_mocked_address
 
 # endregion
 
-# region Delete Method
+
+# region Delete Method.
 
 @pytest.mark.asyncio
-async def test_Delete_ShouldReturn204_WhenRecordIsDeleted(client_with_mocked_address_service):
+async def test_Delete_ShouldReturnNoContent_WhenRecordIsDeleted(client_with_mocked_address_service):
     # Arrange
     client, mock_service = client_with_mocked_address_service
     mock_service.DeleteAsync.return_value = True
@@ -187,7 +193,7 @@ async def test_Delete_ShouldReturn204_WhenRecordIsDeleted(client_with_mocked_add
 
 
 @pytest.mark.asyncio
-async def test_Delete_ShouldReturn404_WhenRecordDoesNotExist(client_with_mocked_address_service):
+async def test_Delete_ShouldReturnNotFound_WhenRecordDoesNotExist(client_with_mocked_address_service):
     # Arrange
     client, mock_service = client_with_mocked_address_service
     mock_service.DeleteAsync.return_value = False

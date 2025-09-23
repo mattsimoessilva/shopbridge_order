@@ -185,7 +185,7 @@ class OrderService(OrderServiceInterface):
                     else:
                         await self._product_client.release_product_stock(item.product_id, item.quantity)
 
-            elif dto.status == OrderStatus.COMPLETED:
+            elif dto.status == OrderStatus.DELIVERED:
                 for item in existing.items:
                     if item.product_variant_id:
                         await self._product_client.reduce_variant_stock(item.product_variant_id, item.quantity)

@@ -55,7 +55,7 @@ class AddressService(AddressServiceInterface):
         return [
             AddressReadDTO(
                 id=e.id,
-                customer_id=e.customer_id,
+                customer_id=str(e.customer_id),
                 street=e.street,
                 city=e.city,
                 state=e.state,
@@ -78,7 +78,7 @@ class AddressService(AddressServiceInterface):
 
         return AddressReadDTO(
             id=entity.id,
-            customer_id=e.customer_id,
+            customer_id=entity.customer_id,
             street=entity.street,
             city=entity.city,
             state=entity.state,
