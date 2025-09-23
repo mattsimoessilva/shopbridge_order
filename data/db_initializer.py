@@ -35,16 +35,12 @@ async def initialize_database():
         orders = [
             Order(id=uuid.UUID("dddddddd-dddd-dddd-dddd-dddddddddddd"), customer_id="3fa85f64-5717-4562-b3fc-2c963f66afa6", created_at=datetime.now(timezone.utc), status=OrderStatus.PENDING, items=[
                 OrderItem(id=uuid.UUID("11111111-aaaa-4444-bbbb-aaaaaaaaaaaa"), product_id=uuid.UUID("11111111-aaaa-4444-bbbb-111111111111"), quantity=2, unit_price=Decimal("129.99")),
-                OrderItem(id=uuid.UUID("22222222-bbbb-4444-cccc-bbbbbbbbbbbb"), product_id=uuid.UUID("22222222-bbbb-4444-cccc-222222222222"), quantity=1, unit_price=Decimal("299.99")),
-                OrderItem(id=uuid.UUID("33333333-cccc-4444-dddd-cccccccccccc"), product_id=uuid.UUID("33333333-cccc-4444-dddd-333333333333"), quantity=3, unit_price=Decimal("199.99"))
             ]),
             Order(id=uuid.UUID("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"), customer_id="44444444-4444-4444-4444-444444444444", created_at=datetime.now(timezone.utc), status=OrderStatus.PENDING, items=[
-                OrderItem(id=uuid.UUID("44444444-aaaa-4444-bbbb-aaaaaaaaaaaa"), product_id=uuid.UUID("44444444-aaaa-4444-bbbb-444444444444"), quantity=5, unit_price=Decimal("49.99")),
-                OrderItem(id=uuid.UUID("55555555-bbbb-4444-cccc-bbbbbbbbbbbb"), product_id=uuid.UUID("55555555-bbbb-4444-cccc-555555555555"), quantity=2, unit_price=Decimal("89.99"))
+                OrderItem(id=uuid.UUID("44444444-aaaa-4444-bbbb-aaaaaaaaaaaa"), product_id=uuid.UUID("22222222-bbbb-4444-cccc-222222222222"), quantity=5, unit_price=Decimal("349.99")),
             ]),
             Order(id=uuid.UUID("ffffffff-ffff-ffff-ffff-ffffffffffff"), customer_id="55555555-5555-5555-5555-555555555555", created_at=datetime.now(timezone.utc), status=OrderStatus.PENDING, items=[
-                OrderItem(id=uuid.UUID("66666666-aaaa-4444-bbbb-aaaaaaaaaaaa"), product_id=uuid.UUID("66666666-aaaa-4444-bbbb-666666666666"), quantity=1, unit_price=Decimal("999.99")),
-                OrderItem(id=uuid.UUID("77777777-bbbb-4444-cccc-bbbbbbbbbbbb"), product_id=uuid.UUID("77777777-bbbb-4444-cccc-777777777777"), quantity=10, unit_price=Decimal("9.99"))
+                OrderItem(id=uuid.UUID("66666666-aaaa-4444-bbbb-aaaaaaaaaaaa"), product_id=uuid.UUID("33333333-cccc-4444-dddd-333333333333"), quantity=1, unit_price=Decimal("249.99")),
             ])
         ]
         for order in orders:
