@@ -185,6 +185,13 @@ class OrderService(OrderServiceInterface):
                     else:
                         await self._product_client.release_product_stock(item.product_id, item.quantity)
 
+                if existing.shipment_id:
+                    shipment_update_payload = {
+                        "shipment_id": existing.shipment_id,
+                        "status": "Cancelled"
+                    }
+                    await self._logistics_client.update_shipment(**shipment_update_payload)
+
             elif dto.status == OrderStatus.DELIVERED:
                 for item in existing.items:
                     if item.product_variant_id:

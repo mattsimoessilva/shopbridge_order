@@ -92,20 +92,20 @@ class LogisticsServiceClient:
             return await resp.json()
 
 
-    async def update_shipment(self, shipment_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+    async def update_shipment(self, shipment_id: str, status: str) -> None:
         session = await self._get_session()
-        url = f"{self._base_url}/Shipment/{shipment_id}"
+        url = f"{self._base_url}/Shipment/{shipment_id}/status"
 
-        async with session.patch(url, json=updates, timeout=5) as resp:
-            if resp.status == 404:
+        payload = {"status": status}
+
+        async with session.patch(url, json=payload, timeout=5) as http_response:
+            if http_response.status == 404:
                 raise ValueError(f"Shipment {shipment_id} not found.")
+            elif http_response.status != 200:
+                text = await http_response.text()
+                raise RuntimeError(f"Error updating shipment: {http_response.status} - {text}")
 
-            elif resp.status != 200:
-                text = await resp.text()
-                raise RuntimeError(f"Error updating shipment: {resp.status} - {text}")
-
-            return await resp.json()
-
+            return None
 
     async def close(self):
         if self._session and not self._session.closed:
