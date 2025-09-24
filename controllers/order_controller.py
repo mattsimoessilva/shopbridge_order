@@ -1,5 +1,3 @@
-# controllers/order_controller.py
-
 from uuid import UUID
 from flask import g, jsonify, current_app
 from flask_smorest import Blueprint
@@ -7,6 +5,7 @@ from flask_smorest import Blueprint
 from models.schemas.order.order_create_schema import OrderCreateSchema
 from models.schemas.order.order_update_schema import OrderUpdateSchema
 from models.schemas.order.order_read_schema import OrderReadSchema
+from models.schemas.order.order_patch_schema import OrderPatchSchema
 
 
 blp = Blueprint(
@@ -20,13 +19,13 @@ blp = Blueprint(
 @blp.route("/", methods=["POST"])
 @blp.arguments(OrderCreateSchema)
 @blp.response(201, OrderReadSchema)
-async def Create(order_data):
+async def Create(data):
     """Creates a new Order."""
     try:
         session = g.db
         service = current_app.extensions["order_service"]
 
-        result = await service.CreateAsync(order_data, session=session)
+        result = await service.CreateAsync(data, session=session)
         return result
 
     except ValueError as ex:
@@ -51,17 +50,17 @@ async def GetAll():
         return jsonify({"error": str(ex)}), 500
 
 
-@blp.route("/<uuid:order_id>", methods=["GET"])
+@blp.route("/<uuid:id>", methods=["GET"])
 @blp.response(200, OrderReadSchema)
-async def GetById(order_id: UUID):
+async def GetById(id: UUID):
     """Retrieves a specific Order by ID."""
     try:
         session = g.db
         service = current_app.extensions["order_service"]
 
-        dto = await service.GetByIdAsync(order_id, session=session)
+        dto = await service.GetByIdAsync(id, session=session)
         if dto is None:
-            return jsonify({"message": "Order not found"}), 404
+            return jsonify({"message": "Record not found"}), 404
 
         return dto
 
@@ -69,18 +68,18 @@ async def GetById(order_id: UUID):
         return jsonify({"error": str(ex)}), 500
 
 
-@blp.route("/", methods=["PUT"])
+@blp.route("/<uuid:id>", methods=["PUT"])
 @blp.arguments(OrderUpdateSchema)
 @blp.response(200)
-async def Update(order_data):
+async def Update(data, id):
     """Updates an Order record."""
     try:
         session = g.db
         service = current_app.extensions["order_service"]
 
-        success = await service.UpdateAsync(order_data, session=session)
+        success = await service.UpdateAsync(data, session=session)
         if not success:
-            return jsonify({"message": "Order not found"}), 404
+            return jsonify({"message": "Record not found"}), 404
 
         return {}, 200
 
@@ -91,19 +90,43 @@ async def Update(order_data):
         return jsonify({"error": str(ex)}), 500
 
 
-@blp.route("/<uuid:order_id>", methods=["DELETE"])
+@blp.route("/<uuid:id>", methods=["DELETE"])
 @blp.response(204)
-async def Delete(order_id: UUID):
+async def Delete(id: UUID):
     """Deletes an Order by ID."""
     try:
         session = g.db
         service = current_app.extensions["order_service"]
 
-        deleted = await service.DeleteAsync(order_id, session=session)
+        deleted = await service.DeleteAsync(id, session=session)
         if not deleted:
-            return jsonify({"message": "Order not found"}), 404
+            return jsonify({"message": "Record not found"}), 404
 
         return "", 204
+
+    except Exception as ex:
+        return jsonify({"error": str(ex)}), 500
+
+@blp.route("/<uuid:id>", methods=["PATCH"])
+@blp.arguments(OrderPatchSchema(partial=True))
+@blp.response(200, OrderReadSchema)
+async def Patch(data, id: UUID):
+    """Partially updates an Order (e.g., status transitions)."""
+    try:
+        session = g.db
+        service = current_app.extensions["order_service"]
+
+        data["id"] = id
+
+        updated = await service.PatchAsync(data, session=session)
+        if not updated:
+            return jsonify({"message": "Record not found"}), 404
+
+        dto = await service.GetByIdAsync(id, session=session)
+        return dto
+
+    except ValueError as ex:
+        return jsonify({"error": str(ex)}), 400
 
     except Exception as ex:
         return jsonify({"error": str(ex)}), 500

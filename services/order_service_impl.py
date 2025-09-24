@@ -8,6 +8,7 @@ from controllers import address_blp
 from models.dtos.order.order_create_dto import OrderCreateDTO
 from models.dtos.order.order_read_dto import OrderReadDTO
 from models.dtos.order.order_update_dto import OrderUpdateDTO
+from models.dtos.order.order_patch_dto import OrderPatchDTO
 from models.dtos.order_item.order_item_read_dto import OrderItemReadDTO
 from models.entities.order import Order
 from models.entities.order_item import OrderItem
@@ -162,8 +163,40 @@ class OrderService(OrderServiceInterface):
             ]
         )
 
+    async def UpdateAsync(self, id: str, dto: OrderUpdateDTO, session) -> bool:
+        if isinstance(dto, dict):
+            dto = OrderUpdateDTO(**dto)
 
-    async def UpdateAsync(self, dto: OrderUpdateDTO, session) -> bool:
+        if dto is None:
+            raise ValueError("Record data cannot be null or missing an identifier.")
+
+        existing = await self._repository.GetByIdAsync(id, session=session)
+        if existing is None:
+            return False
+
+        if existing.status in [OrderStatus.PROCESSING, OrderStatus.IN_TRANSIT]:
+            raise ValueError("Record can no longer be updated once processing or in transit.")
+
+        existing.customer_id = dto.customer_id
+        existing.status = dto.status
+        existing.items = dto.items
+        existing.shipment_id = dto.shipment_id
+        existing.total_amount = dto.total_amount
+
+        existing.updated_at = datetime.now(timezone.utc)
+
+        await self._repository.UpdateAsync(existing, session=session)
+        return True
+
+
+    async def DeleteAsync(self, id: UUID, session) -> bool:
+        if not id:
+            raise ValueError("Record identifier cannot be empty.")
+
+        return await self._repository.DeleteAsync(id, session=session)
+
+
+    async def PatchAsync(self, dto: OrderPatchDTO, session) -> bool:
         if isinstance(dto, dict):
             dto = OrderUpdateDTO(**dto)
 
@@ -171,14 +204,27 @@ class OrderService(OrderServiceInterface):
             raise ValueError("Record data cannot be null or missing an identifier.")
 
         existing = await self._repository.GetByIdAsync(dto.id, session=session)
-
         if existing is None:
             return False
 
         if dto.status is not None:
-            existing.status = dto.status
+            allowed_transitions = {
+                OrderStatus.PENDING: {OrderStatus.PROCESSING, OrderStatus.CANCELLED},
+                OrderStatus.PROCESSING: {OrderStatus.IN_TRANSIT, OrderStatus.CANCELLED},
+                OrderStatus.IN_TRANSIT: {OrderStatus.COMPLETED, OrderStatus.CANCELLED},
+                OrderStatus.COMPLETED: set(),   
+                OrderStatus.CANCELLED: set(),
+            }
 
-            if dto.status == OrderStatus.CANCELLED:
+            current_status = existing.status
+            new_status = dto.status
+
+            if new_status not in allowed_transitions.get(current_status, set()):
+                raise ValueError(
+                    f"Inappropriate status transition: {current_status.value} to {new_status.value}"
+                )
+
+            if new_status == OrderStatus.CANCELLED:
                 for item in existing.items:
                     if item.product_variant_id:
                         await self._product_client.release_variant_stock(item.product_variant_id, item.quantity)
@@ -192,18 +238,17 @@ class OrderService(OrderServiceInterface):
                     }
                     await self._logistics_client.update_shipment(**shipment_update_payload)
 
-            elif dto.status == OrderStatus.DELIVERED:
+            elif new_status == OrderStatus.COMPLETED:
                 for item in existing.items:
                     if item.product_variant_id:
                         await self._product_client.reduce_variant_stock(item.product_variant_id, item.quantity)
                     else:
                         await self._product_client.reduce_product_stock(item.product_id, item.quantity)
 
-            if dto.status == OrderStatus.PROCESSING:
+            elif new_status == OrderStatus.PROCESSING:
                 address_entity = await self._address_repository.GetByCustomerIdAsync(
                     existing.customer_id, session=session
                 )
-
                 if not address_entity:
                     raise ValueError(f"No address found for customer {existing.customer_id}")
 
@@ -221,7 +266,6 @@ class OrderService(OrderServiceInterface):
                 }
 
                 shipment_response = await self._logistics_client.create_shipment(**shipment_payload)
-
                 if not shipment_response or not shipment_response.get("id"):
                     raise RuntimeError("Shipment creation failed, order not saved.")
 
@@ -230,12 +274,4 @@ class OrderService(OrderServiceInterface):
         existing.updated_at = datetime.now(timezone.utc)
 
         await self._repository.UpdateAsync(existing, session=session)
-
         return True
-
-
-    async def DeleteAsync(self, id: UUID, session) -> bool:
-        if not id:
-            raise ValueError("Record identifier cannot be empty.")
-
-        return await self._repository.DeleteAsync(id, session=session)

@@ -6,5 +6,10 @@ from models.dtos.order_item.order_item_update_dto import OrderItemUpdateDTO
 
 
 class OrderUpdateDTO(BaseModel):
-    id: uuid.UUID
-    status: Optional[OrderStatus] = None
+    customer_id: str
+    shipment_id: Optional[OrderStatus] = None
+    total_amount: float
+    status: OrderStatus
+    items: List["OrderItemUpdateDTO"]
+
+

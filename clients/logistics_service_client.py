@@ -79,7 +79,7 @@ class LogisticsServiceClient:
 
     async def get_shipment(self, shipment_id: str) -> Dict[str, Any]:
         session = await self._get_session()
-        url = f"{self._base_url}/Shipment/{shipment_id}"
+        url = f"{self._base_url}/shipments/{shipment_id}"
 
         async with session.get(url, timeout=5) as resp:
             if resp.status == 404:
@@ -94,7 +94,7 @@ class LogisticsServiceClient:
 
     async def update_shipment(self, shipment_id: str, status: str) -> None:
         session = await self._get_session()
-        url = f"{self._base_url}/Shipment/{shipment_id}/status"
+        url = f"{self._base_url}/shipments/{shipment_id}/status"
 
         payload = {"status": status}
 
