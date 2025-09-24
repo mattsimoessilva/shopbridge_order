@@ -196,14 +196,14 @@ class OrderService(OrderServiceInterface):
         return await self._repository.DeleteAsync(id, session=session)
 
 
-    async def PatchAsync(self, dto: OrderPatchDTO, session) -> bool:
+    async def PatchAsync(self, id: UUID, dto: OrderPatchDTO, session) -> bool:
         if isinstance(dto, dict):
-            dto = OrderUpdateDTO(**dto)
+            dto = OrderPatchDTO(**dto)
 
-        if dto is None or not dto.id:
+        if dto is None or not id:
             raise ValueError("Record data cannot be null or missing an identifier.")
 
-        existing = await self._repository.GetByIdAsync(dto.id, session=session)
+        existing = await self._repository.GetByIdAsync(id, session=session)
         if existing is None:
             return False
 

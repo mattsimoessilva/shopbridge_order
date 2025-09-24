@@ -116,9 +116,7 @@ async def Patch(data, id: UUID):
         session = g.db
         service = current_app.extensions["order_service"]
 
-        data["id"] = id
-
-        updated = await service.PatchAsync(data, session=session)
+        updated = await service.PatchAsync(id, data, session=session)
         if not updated:
             return jsonify({"message": "Record not found"}), 404
 
