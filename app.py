@@ -63,8 +63,8 @@ def create_app() -> FastAPI:
 
     # Include routers
     from controllers import order_router, address_router
-    app.include_router(order_router, prefix="/api/orders", tags=["orders"])
-    app.include_router(address_router, prefix="/api/addresses", tags=["addresses"])
+    app.include_router(order_router, tags=["orders"])
+    app.include_router(address_router, tags=["addresses"])
 
     return app
 

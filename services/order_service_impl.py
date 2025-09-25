@@ -228,44 +228,52 @@ class OrderService(OrderServiceInterface):
                     else:
                         await self._product_client.reduce_product_stock(item.product_id, item.quantity)
 
+            elif new_status == OrderStatus.IN_TRANSIT:
+                if not existing.shipment_id:
+                    raise ValueError("Cannot move to IN_TRANSIT: shipment does not exist.")
+
+                shipment_status_response = await self._logistics_client.get_shipment(existing.shipment_id)
+                if not shipment_status_response or shipment_status_response.get("status") != "Dispatched":
+                    raise ValueError("Shipment is not yet dispatched; cannot move order to IN_TRANSIT.")
+
+                existing.status = OrderStatus.IN_TRANSIT
+
+
             elif new_status == OrderStatus.PROCESSING:
-                address_entity = await self._address_repository.GetByCustomerIdAsync(
-                    existing.customer_id, session=session
-                )
-                if not address_entity:
-                    raise ValueError(f"No address found for customer {existing.customer_id}")
 
-                availability_payload = {
-                    "street": address_entity.street,
-                    "city": address_entity.city,
-                    "state": address_entity.state,
-                    "postalCode": address_entity.postal_code,
-                    "country": address_entity.country
-                }
+                if not existing.shipment_id:
+                    address_entity = await self._address_repository.GetByCustomerIdAsync(
+                        existing.customer_id, session=session
+                    )
+                    if not address_entity:
+                        raise ValueError(f"No address found for customer {existing.customer_id}")
 
-                availability_response = await self._logistics_client.check_availability(**availability_payload)
+                    availability_payload = {
+                        "street": address_entity.street,
+                        "city": address_entity.city,
+                        "state": address_entity.state,
+                        "postalCode": address_entity.postal_code,
+                        "country": address_entity.country
+                    }
 
-                if not availability_response or not availability_response.get("valid", False):
-                    raise ValueError("Destination is not serviceable for shipping.")
+                    availability_response = await self._logistics_client.check_availability(**availability_payload)
+                    if not availability_response or not availability_response.get("valid", False):
+                        raise ValueError("Destination is not serviceable for shipping.")
 
-                shipment_payload = {
-                    "order_id": str(existing.id),
-                    "status": "Pending",
-                    "dispatchDate": None,
-                    "carrier": "DefaultCarrier",
-                    "serviceLevel": "Standard",
-                    "street": address_entity.street,
-                    "city": address_entity.city,
-                    "state": address_entity.state,
-                    "postalCode": address_entity.postal_code,
-                    "country": address_entity.country
-                }
+                    shipment_payload = {
+                        "order_id": str(existing.id),
+                        "status": "Pending",
+                        "dispatchDate": None,
+                        "carrier": "DefaultCarrier",
+                        "serviceLevel": "Standard",
+                        **availability_payload
+                    }
 
-                shipment_response = await self._logistics_client.create_shipment(**shipment_payload)
-                if not shipment_response or not shipment_response.get("id"):
-                    raise RuntimeError("Shipment creation failed, order not saved.")
+                    shipment_response = await self._logistics_client.create_shipment(**shipment_payload)
+                    if not shipment_response or not shipment_response.get("id"):
+                        raise RuntimeError("Shipment creation failed, order not saved.")
 
-                existing.shipment_id = shipment_response["id"]
+                    existing.shipment_id = shipment_response["id"]
 
             existing.status = new_status
 
