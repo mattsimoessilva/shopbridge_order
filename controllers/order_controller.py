@@ -1,4 +1,4 @@
-from uuid import UUID
+﻿from uuid import UUID
 from flask import g, jsonify, current_app
 from flask_smorest import Blueprint
 
@@ -107,7 +107,7 @@ async def Delete(id: UUID):
     except Exception as ex:
         return jsonify({"error": str(ex)}), 500
 
-@blp.route("/<uuid:id>", methods=["PATCH"])
+@blp.route("/<uuid:id>/status", methods=["PATCH"])
 @blp.arguments(OrderPatchSchema(partial=True))
 @blp.response(200, OrderReadSchema)
 async def Patch(data, id: UUID):
