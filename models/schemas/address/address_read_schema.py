@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, validate
+﻿from marshmallow import Schema, fields, validate
 
 class AddressReadSchema(Schema):
     id = fields.UUID(required=True)
@@ -25,4 +25,3 @@ class AddressReadSchema(Schema):
     )
     created_at = fields.DateTime(required=True)
     updated_at = fields.DateTime(allow_none=True)
-    deleted_at = fields.DateTime(allow_none=True)

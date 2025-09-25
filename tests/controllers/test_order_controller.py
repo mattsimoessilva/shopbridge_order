@@ -1,4 +1,4 @@
-import pytest
+﻿import pytest
 import uuid
 from datetime import datetime, timezone
 from unittest.mock import ANY
@@ -15,7 +15,6 @@ def full_order_dict(order_id=None, customer_id=None, status="PENDING"):
         "id": uuid.UUID(order_id) if order_id else uuid.uuid4(),
         "created_at": datetime.now(timezone.utc),
         "updated_at": None,
-        "deleted_at": None,
         "customer_id": uuid.UUID(customer_id) if customer_id else uuid.uuid4(),
         "total_amount": Decimal("100.00"),
         "status": status,

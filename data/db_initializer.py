@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -24,9 +24,9 @@ async def initialize_database():
 
         # Step 1: Seed Addresses
         addresses = [
-            Address(id=uuid.UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), customer_id="3fa85f64-5717-4562-b3fc-2c963f66afa6", street="742 Evergreen Terrace", city="Springfield", state="IL", postal_code="62704", country="USA"),
-            Address(id=uuid.UUID("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), customer_id="44444444-4444-4444-4444-444444444444", street="221B Baker Street", city="London", state="LDN", postal_code="NW1 6XE", country="UK"),
-            Address(id=uuid.UUID("cccccccc-cccc-cccc-cccc-cccccccccccc"), customer_id="55555555-5555-5555-5555-555555555555", street="12 Grimmauld Place", city="London", state="LDN", postal_code="WC1N 3XX", country="UK")
+            Address(id=uuid.UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), customer_id="3fa85f64-5717-4562-b3fc-2c963f66afa6", street="Avenida Paulista, 1578", city="S\u00e3o Paulo", state="SP", postal_code="01310-200", country="Brasil"),
+            Address(id=uuid.UUID("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), customer_id="44444444-4444-4444-4444-444444444444", street="Rua das Flores, 45", city="Curitiba", state="PR", postal_code="80020-090", country="Brasil"),
+            Address(id=uuid.UUID("cccccccc-cccc-cccc-cccc-cccccccccccc"), customer_id="55555555-5555-5555-5555-555555555555", street="Praia de Botafogo, 300", city="Rio de Janeiro", state="RJ", postal_code="22250-040", country="Brasil")
         ]
         session.add_all(addresses)
         await session.commit()

@@ -1,4 +1,4 @@
-import aiohttp
+﻿import aiohttp
 import asyncio
 from typing import Any, Dict, Optional
 import json
@@ -44,7 +44,7 @@ class LogisticsServiceClient:
     ) -> Dict[str, Any]:
 
         session = await self._get_session()
-        url = f"{self._base_url}/Shipment"
+        url = f"{self._base_url}/shipments"
 
         payload = {
             "orderId": order_id,
@@ -110,3 +110,37 @@ class LogisticsServiceClient:
     async def close(self):
         if self._session and not self._session.closed:
             await self._session.close()
+
+    async def check_availability(
+        self,
+        street: str,
+        city: str,
+        state: str,
+        postalCode: str,
+        country: str
+    ) -> Dict[str, Any]:
+        session = await self._get_session()
+        url = f"{self._base_url}/shipping/availability"
+
+        payload = {
+            "street": street,
+            "city": city,
+            "state": state,
+            "postalCode": postalCode,
+            "country": country
+        }
+
+        async with session.post(url, json=payload, timeout=5) as resp:
+            text_body = await resp.text()
+
+            if resp.status == 400:
+                raise ValueError(f"Bad request when checking availability: {text_body}")
+            elif resp.status == 500:
+                raise RuntimeError(f"Server error when checking availability: {text_body}")
+            elif resp.status not in (200, 201):
+                raise RuntimeError(f"Unexpected status {resp.status}: {text_body}")
+
+            if text_body.strip() and resp.headers.get("Content-Type", "").startswith("application/json"):
+                return json.loads(text_body)
+
+            return {}

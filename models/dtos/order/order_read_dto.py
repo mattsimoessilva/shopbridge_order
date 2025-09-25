@@ -1,4 +1,4 @@
-import uuid
+﻿import uuid
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel
@@ -11,7 +11,6 @@ class OrderReadDTO(BaseModel):
     id: uuid.UUID
     created_at: datetime
     updated_at: Optional[datetime] = None
-    deleted_at: Optional[datetime] = None
     customer_id: uuid.UUID
     shipment_id: Optional[str] = None
     total_amount: Decimal

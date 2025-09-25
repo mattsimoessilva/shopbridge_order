@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+﻿from datetime import datetime, timezone
 from typing import List, Optional
 from uuid import UUID, uuid4
 
@@ -44,8 +44,7 @@ class AddressService(AddressServiceInterface):
             postal_code=entity.postal_code,
             country=entity.country,
             created_at=entity.created_at,
-            updated_at=entity.updated_at,
-            deleted_at=getattr(entity, "deleted_at", None)
+            updated_at=entity.updated_at
         )
 
     async def GetAllAsync(self, session) -> List[AddressReadDTO]:
@@ -62,8 +61,7 @@ class AddressService(AddressServiceInterface):
                 postal_code=e.postal_code,
                 country=e.country,
                 created_at=e.created_at,
-                updated_at=e.updated_at,
-                deleted_at=getattr(e, "deleted_at", None)
+                updated_at=e.updated_at
             )
             for e in entities
         ]
@@ -85,8 +83,7 @@ class AddressService(AddressServiceInterface):
             postal_code=entity.postal_code,
             country=entity.country,
             created_at=entity.created_at,
-            updated_at=entity.updated_at,
-            deleted_at=getattr(entity, "deleted_at", None)
+            updated_at=entity.updated_at
         )
 
     async def UpdateAsync(self, dto: AddressUpdateDTO, session) -> bool:

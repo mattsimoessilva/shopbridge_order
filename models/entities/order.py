@@ -1,4 +1,4 @@
-import uuid
+﻿import uuid
 from datetime import datetime
 from typing import List, Optional
 from sqlalchemy import DateTime, ForeignKey, Numeric, Enum, String
@@ -18,8 +18,6 @@ class Order(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
     updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-
-    deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     customer_id: Mapped[str] = mapped_column(String(36), nullable=False)
 

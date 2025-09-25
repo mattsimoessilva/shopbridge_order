@@ -1,4 +1,4 @@
-import uuid
+﻿import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import List, Optional
@@ -252,6 +252,19 @@ class OrderService(OrderServiceInterface):
                 if not address_entity:
                     raise ValueError(f"No address found for customer {existing.customer_id}")
 
+                availability_payload = {
+                    "street": address_entity.street,
+                    "city": address_entity.city,
+                    "state": address_entity.state,
+                    "postalCode": address_entity.postal_code,
+                    "country": address_entity.country
+                }
+
+                availability_response = await self._logistics_client.check_availability(**availability_payload)
+
+                if not availability_response or not availability_response.get("valid", False):
+                    raise ValueError("Destination is not serviceable for shipping.")
+
                 shipment_payload = {
                     "order_id": str(existing.id),
                     "status": "Pending",
@@ -270,6 +283,8 @@ class OrderService(OrderServiceInterface):
                     raise RuntimeError("Shipment creation failed, order not saved.")
 
                 existing.shipment_id = shipment_response["id"]
+
+            existing.status = new_status
 
         existing.updated_at = datetime.now(timezone.utc)
 
