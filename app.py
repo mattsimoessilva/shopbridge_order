@@ -31,18 +31,18 @@ def create_app() -> FastAPI:
         title="Order API",
         version="v1",
         openapi_url="/openapi.json",
-        docs_url="/swagger-ui",  # FastAPI already ships Swagger UI
+        docs_url="/swagger-ui",
     )
 
     # Initialize repositories
     address_repository = AddressRepository(session_factory=async_session_factory)
     order_repository = OrderRepository(session_factory=async_session_factory)
 
-    # Initialize clients (not yet opened)
+    # Initialize clients (will be opened in startup)
     product_client = ProductServiceClient(base_url="http://localhost:5000/api/")
     logistics_client = LogisticsServiceClient(base_url="http://localhost:8000/api/")
 
-    # Initialize services
+    # Initialize services with clients (will be reopened in startup)
     address_service = AddressService(repository=address_repository)
     order_service = OrderService(
         repository=order_repository,
@@ -51,7 +51,7 @@ def create_app() -> FastAPI:
         logistics_client=logistics_client,
     )
 
-    # Store shared state in app
+    # Store shared state
     app.state.engine = engine
     app.state.session_factory = async_session_factory
     app.state.address_repository = address_repository
@@ -61,7 +61,7 @@ def create_app() -> FastAPI:
     app.state.address_service = address_service
     app.state.order_service = order_service
 
-    # Import and include your routers instead of Flask blueprints
+    # Include routers
     from controllers import order_router, address_router
     app.include_router(order_router, prefix="/api/orders", tags=["orders"])
     app.include_router(address_router, prefix="/api/addresses", tags=["addresses"])
@@ -84,19 +84,6 @@ async def startup_event():
         if not address_exists and not order_exists:
             await initialize_database()
 
-    # Open async clients
-    app.state.product_client = await ProductServiceClient("http://localhost:5000/api/").open()
-    app.state.logistics_client = await LogisticsServiceClient("http://localhost:8000/api/").open()
-
-    # Re-init services with opened clients
-    app.state.address_service = AddressService(repository=app.state.address_repository)
-    app.state.order_service = OrderService(
-        repository=app.state.order_repository,
-        address_repository=app.state.address_repository,
-        product_client=app.state.product_client,
-        logistics_client=app.state.logistics_client,
-    )
-
 @app.on_event("shutdown")
 async def shutdown_event():
     if app.state.product_client:
@@ -107,4 +94,4 @@ async def shutdown_event():
 # --- Run with uvicorn ---
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=3000, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=3000, reload=False)

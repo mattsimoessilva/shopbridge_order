@@ -25,11 +25,11 @@ def get_address_repository() -> AddressRepository:
 
 # Provide ProductServiceClient
 def get_product_client() -> ProductServiceClient:
-    return ProductServiceClient(base_url="http://localhost:5000/")  # adjust base_url
+    return ProductServiceClient(base_url="http://localhost:5000/api/")  # adjust base_url
 
 # Provide LogisticsServiceClient
 def get_logistics_client() -> LogisticsServiceClient:
-    return LogisticsServiceClient(base_url="http://localhost:8000/")  # adjust base_url
+    return LogisticsServiceClient(base_url="http://localhost:8000/api/")  # adjust base_url
 
 # Provide OrderService
 async def get_order_service(
