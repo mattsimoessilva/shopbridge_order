@@ -1,5 +1,5 @@
-from typing import List, Optional
-from uuid import UUID
+﻿from typing import List, Optional
+
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -26,7 +26,7 @@ class AddressRepository(AddressRepositoryInterface):
         result = await session.execute(select(Address))
         return result.scalars().all()
 
-    async def GetByIdAsync(self, id: UUID, session: AsyncSession) -> Optional[Address]:
+    async def GetByIdAsync(self, id: str, session: AsyncSession) -> Optional[Address]:
         if not id:
             raise ValueError("Record identifier cannot be empty.")
 
@@ -35,7 +35,7 @@ class AddressRepository(AddressRepositoryInterface):
         )
         return result.scalars().first()
 
-    async def GetByCustomerIdAsync(self, customer_id: UUID, session: AsyncSession) -> Optional[Address]:
+    async def GetByCustomerIdAsync(self, customer_id: str, session: AsyncSession) -> Optional[Address]:
         if not customer_id:
             raise ValueError("Reference identifier cannot be empty.")
 
@@ -55,7 +55,7 @@ class AddressRepository(AddressRepositoryInterface):
         await session.commit()
         return True
 
-    async def DeleteAsync(self, id: UUID, session: AsyncSession) -> bool:
+    async def DeleteAsync(self, id: str, session: AsyncSession) -> bool:
         if not id:
             raise ValueError("Record identifier cannot be empty.")
 

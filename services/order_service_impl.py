@@ -2,9 +2,8 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import List, Optional
-from uuid import UUID
 
-from controllers import address_blp
+
 from models.dtos.order.order_create_dto import OrderCreateDTO
 from models.dtos.order.order_read_dto import OrderReadDTO
 from models.dtos.order.order_update_dto import OrderUpdateDTO
@@ -62,8 +61,8 @@ class OrderService(OrderServiceInterface):
                 await self._product_client.reserve_product_stock(item.product_id, item.quantity)
 
         entity = Order(
-            id=uuid.uuid4(),
-            customer_id=dto.customer_id,
+            id=str4(),
+            customer_id=str(dto.customer_id),
             created_at=datetime.now(timezone.utc),
             status=OrderStatus.PENDING,
             items=[
@@ -111,30 +110,14 @@ class OrderService(OrderServiceInterface):
             return []
 
         return [
-            OrderReadDTO(
-                id=e.id,
-                created_at=e.created_at,
-                customer_id=e.customer_id,
-                shipment_id=e.shipment_id,
-                total_amount=e.total_amount,
-                status=e.status,
-                items=[
-                    OrderItemReadDTO(
-                        id=i.id,
-                        product_id=i.product_id,
-                        product_variant_id=i.product_variant_id,
-                        quantity=i.quantity,
-                        unit_price=i.unit_price,
-                        total_price=i.unit_price * i.quantity
-                    )
-                    for i in e.items
-                ]
-            )
-            for e in entities
+            OrderReadDTO.from_orm(e) for e in entities
         ]
 
 
-    async def GetByIdAsync(self, id: UUID, session) -> Optional[OrderReadDTO]:
+
+
+
+    async def GetByIdAsync(self, id: str, session) -> Optional[OrderReadDTO]:
         if not id:
             raise ValueError("Record identifier cannot be empty.")
 
@@ -189,14 +172,14 @@ class OrderService(OrderServiceInterface):
         return True
 
 
-    async def DeleteAsync(self, id: UUID, session) -> bool:
+    async def DeleteAsync(self, id: str, session) -> bool:
         if not id:
             raise ValueError("Record identifier cannot be empty.")
 
         return await self._repository.DeleteAsync(id, session=session)
 
 
-    async def PatchAsync(self, id: UUID, dto: OrderPatchDTO, session) -> bool:
+    async def PatchAsync(self, id: str, dto: OrderPatchDTO, session) -> bool:
         if isinstance(dto, dict):
             dto = OrderPatchDTO(**dto)
 

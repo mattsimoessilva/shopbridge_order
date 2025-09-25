@@ -1,6 +1,6 @@
 ﻿from datetime import datetime, timezone
 from typing import List, Optional
-from uuid import UUID, uuid4
+
 
 from models.dtos.address.address_create_dto import AddressCreateDTO
 from models.dtos.address.address_read_dto import AddressReadDTO
@@ -66,7 +66,7 @@ class AddressService(AddressServiceInterface):
             for e in entities
         ]
 
-    async def GetByIdAsync(self, id: UUID, session) -> Optional[AddressReadDTO]:
+    async def GetByIdAsync(self, id: str, session) -> Optional[AddressReadDTO]:
         if not id:
             raise ValueError("Record identifier cannot be empty.")
 
@@ -112,7 +112,7 @@ class AddressService(AddressServiceInterface):
         await self._repository.UpdateAsync(existing, session=session)
         return True
 
-    async def DeleteAsync(self, id: UUID, session) -> bool:
+    async def DeleteAsync(self, id: str, session) -> bool:
         if not id:
             raise ValueError("Record identifier cannot be empty.")
         return await self._repository.DeleteAsync(id, session=session)

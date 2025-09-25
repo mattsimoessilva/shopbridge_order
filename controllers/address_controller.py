@@ -1,82 +1,87 @@
-# controllers/address_controller.py
-from uuid import UUID
-from flask import g, jsonify, current_app
-from flask_smorest import Blueprint
+﻿
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.schemas.address.address_create_schema import AddressCreateSchema
 from models.schemas.address.address_update_schema import AddressUpdateSchema
 from models.schemas.address.address_read_schema import AddressReadSchema
 
-blp = Blueprint(
-    "addresses",
-    "addresses",
-    url_prefix="/api/addresses",
-    description="Operations on Addresses"
+from core.dependencies import get_db, get_address_service
+from services.address_service_impl import AddressService
+
+address_router = APIRouter(
+    prefix="/api/addresses",
+    tags=["addresses"],
+    responses={404: {"description": "Not found"}},
 )
 
-@blp.route("/", methods=["POST"])
-@blp.arguments(AddressCreateSchema)
-@blp.response(201, AddressReadSchema)
-async def Create(address_data):
+
+@address_router.post("/", response_model=AddressReadSchema, status_code=status.HTTP_201_CREATED)
+async def create_address(
+    address_data: AddressCreateSchema,
+    session: AsyncSession = Depends(get_db),
+    service: AddressService = Depends(get_address_service),
+):
     try:
-        session = g.db
-        service = current_app.extensions["address_service"]
-        result = await service.CreateAsync(address_data, session=session)
-        return result
+        return await service.CreateAsync(address_data, session=session)
     except ValueError as ex:
-        return jsonify({"error": str(ex)}), 400
+        raise HTTPException(status_code=400, detail=str(ex))
     except Exception as ex:
-        return jsonify({"error": str(ex)}), 500
+        raise HTTPException(status_code=500, detail=str(ex))
 
-@blp.route("/", methods=["GET"])
-@blp.response(200, AddressReadSchema(many=True))
-async def GetAll():
+
+@address_router.get("/", response_model=list[AddressReadSchema])
+async def get_all_addresses(
+    session: AsyncSession = Depends(get_db),
+    service: AddressService = Depends(get_address_service),
+):
     try:
-        session = g.db
-        service = current_app.extensions["address_service"]
-        result = await service.GetAllAsync(session=session)
-        return result
+        return await service.GetAllAsync(session=session)
     except Exception as ex:
-        return jsonify({"error": str(ex)}), 500
+        raise HTTPException(status_code=500, detail=str(ex))
 
-@blp.route("/<uuid:address_id>", methods=["GET"])
-@blp.response(200, AddressReadSchema)
-async def GetById(address_id: UUID):
+
+@address_router.get("/{address_id}", response_model=AddressReadSchema)
+async def get_address_by_id(
+    address_id: str,
+    session: AsyncSession = Depends(get_db),
+    service: AddressService = Depends(get_address_service),
+):
     try:
-        session = g.db
-        service = current_app.extensions["address_service"]
         dto = await service.GetByIdAsync(address_id, session=session)
         if dto is None:
-            return jsonify({"message": "Address not found"}), 404
+            raise HTTPException(status_code=404, detail="Address not found")
         return dto
     except Exception as ex:
-        return jsonify({"error": str(ex)}), 500
+        raise HTTPException(status_code=500, detail=str(ex))
 
-@blp.route("/", methods=["PUT"])
-@blp.arguments(AddressUpdateSchema)
-@blp.response(200)
-async def Update(address_data):
+
+@address_router.put("/", status_code=status.HTTP_200_OK)
+async def update_address(
+    address_data: AddressUpdateSchema,
+    session: AsyncSession = Depends(get_db),
+    service: AddressService = Depends(get_address_service),
+):
     try:
-        session = g.db
-        service = current_app.extensions["address_service"]
         success = await service.UpdateAsync(address_data, session=session)
         if not success:
-            return jsonify({"message": "Address not found"}), 404
-        return {}, 200
+            raise HTTPException(status_code=404, detail="Address not found")
+        return {"message": "Updated successfully"}
     except ValueError as ex:
-        return jsonify({"error": str(ex)}), 400
+        raise HTTPException(status_code=400, detail=str(ex))
     except Exception as ex:
-        return jsonify({"error": str(ex)}), 500
+        raise HTTPException(status_code=500, detail=str(ex))
 
-@blp.route("/<uuid:address_id>", methods=["DELETE"])
-@blp.response(204)
-async def Delete(address_id: UUID):
+
+@address_router.delete("/{address_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_address(
+    address_id: str,
+    session: AsyncSession = Depends(get_db),
+    service: AddressService = Depends(get_address_service),
+):
     try:
-        session = g.db
-        service = current_app.extensions["address_service"]
         deleted = await service.DeleteAsync(address_id, session=session)
         if not deleted:
-            return jsonify({"message": "Address not found"}), 404
-        return "", 204
+            raise HTTPException(status_code=404, detail="Address not found")
     except Exception as ex:
-        return jsonify({"error": str(ex)}), 500
+        raise HTTPException(status_code=500, detail=str(ex))

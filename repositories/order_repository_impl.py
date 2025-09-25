@@ -1,5 +1,5 @@
-from typing import List, Optional
-from uuid import UUID
+﻿from typing import List, Optional
+
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -26,7 +26,7 @@ class OrderRepository(OrderRepositoryInterface):
         result = await session.execute(select(Order))
         return result.scalars().all()
 
-    async def GetByIdAsync(self, id: UUID, session: AsyncSession) -> Optional[Order]:
+    async def GetByIdAsync(self, id: str, session: AsyncSession) -> Optional[Order]:
         if not id:
             raise ValueError("Record identifier cannot be empty.")
 
@@ -46,7 +46,7 @@ class OrderRepository(OrderRepositoryInterface):
         await session.commit()
         return True
 
-    async def DeleteAsync(self, id: UUID, session: AsyncSession) -> bool:
+    async def DeleteAsync(self, id: str, session: AsyncSession) -> bool:
         if not id:
             raise ValueError("Record identifier cannot be empty.")
 

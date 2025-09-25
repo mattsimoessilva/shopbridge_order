@@ -1,4 +1,4 @@
-import pytest
+﻿import pytest
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -45,12 +45,12 @@ async def test_CreateAsync_ShouldRaiseValueError_WhenDTOIsNone(service_with_mock
 async def test_CreateAsync_ShouldReturnDTO_WhenDTOIsValid(service_with_mocks):
     service, repo_mock, _, product_client_mock, _ = service_with_mocks
 
-    dto = OrderCreateDTO(customer_id=uuid.uuid4(), items=[])
+    dto = OrderCreateDTO(customer_id=str4(), items=[])
     repo_mock.AddAsync.return_value = None
 
     result = await service.CreateAsync(dto, session="session")
 
-    assert isinstance(result.id, uuid.UUID)
+    assert isinstance(result.id, str)
     assert result.customer_id == dto.customer_id
     assert result.status == OrderStatus.PENDING
     assert result.total_amount == 0
@@ -61,7 +61,7 @@ async def test_CreateAsync_ShouldReturnDTO_WhenDTOIsValid(service_with_mocks):
 async def test_CreateAsync_ShouldRaiseException_WhenRepositoryFails(service_with_mocks):
     service, repo_mock, _, _, _ = service_with_mocks
 
-    dto = OrderCreateDTO(customer_id=uuid.uuid4(), items=[])
+    dto = OrderCreateDTO(customer_id=str4(), items=[])
     repo_mock.AddAsync.side_effect = Exception("Repository failure")
 
     with pytest.raises(Exception) as exc_info:
@@ -91,8 +91,8 @@ async def test_GetAllAsync_ShouldReturnMappedDTOs_WhenRecordsExist(service_with_
     service, repo_mock, _, _, _ = service_with_mocks
 
     order = Order(
-        id=uuid.uuid4(),
-        customer_id=uuid.uuid4(),
+        id=str4(),
+        customer_id=str4(),
         created_at=datetime.now(timezone.utc),
         total_amount=Decimal("10.00"),
         status=OrderStatus.PENDING,
@@ -133,10 +133,10 @@ async def test_GetByIdAsync_ShouldRaiseValueError_WhenIdIsEmpty(service_with_moc
 async def test_GetByIdAsync_ShouldReturnMappedDTO_WhenRecordExists(service_with_mocks):
     service, repo_mock, _, _, _ = service_with_mocks
 
-    order_id = uuid.uuid4()
+    order_id = str4()
     order = Order(
         id=order_id,
-        customer_id=uuid.uuid4(),
+        customer_id=str4(),
         created_at=datetime.now(timezone.utc),
         total_amount=Decimal("20.00"),
         status=OrderStatus.PENDING,
@@ -157,7 +157,7 @@ async def test_GetByIdAsync_ShouldRaiseException_WhenRepositoryFails(service_wit
     repo_mock.GetByIdAsync.side_effect = Exception("Repository failure")
 
     with pytest.raises(Exception):
-        await service.GetByIdAsync(uuid.uuid4(), session="session")
+        await service.GetByIdAsync(str4(), session="session")
 
 # endregion
 
@@ -179,7 +179,7 @@ async def test_UpdateAsync_ShouldRaiseValueError_WhenDTOisNullOrIdIsEmpty(servic
 async def test_UpdateAsync_ShouldReturnTrue_WhenUpdateIsSuccessful(service_with_mocks):
     service, repo_mock, _, _, _ = service_with_mocks
 
-    dto = OrderUpdateDTO(id=uuid.uuid4(), status=OrderStatus.PENDING)
+    dto = OrderUpdateDTO(id=str4(), status=OrderStatus.PENDING)
     existing_order = Order(id=dto.id, items=[])
     repo_mock.GetByIdAsync.return_value = existing_order
 
@@ -193,7 +193,7 @@ async def test_UpdateAsync_ShouldReturnTrue_WhenUpdateIsSuccessful(service_with_
 async def test_UpdateAsync_ShouldRaiseException_WhenRepositoryFails(service_with_mocks):
     service, repo_mock, _, _, _ = service_with_mocks
 
-    dto = OrderUpdateDTO(id=uuid.uuid4(), status=OrderStatus.PENDING)
+    dto = OrderUpdateDTO(id=str4(), status=OrderStatus.PENDING)
     repo_mock.GetByIdAsync.side_effect = Exception("Repository failure")
 
     with pytest.raises(Exception):
@@ -208,7 +208,7 @@ async def test_UpdateAsync_ShouldRaiseException_WhenRepositoryFails(service_with
 async def test_DeleteAsync_ShouldCallRepository_WithCorrectId(service_with_mocks):
     service, repo_mock, _, _, _ = service_with_mocks
 
-    order_id = uuid.uuid4()
+    order_id = str4()
     repo_mock.DeleteAsync.return_value = True
 
     result = await service.DeleteAsync(order_id, session="session")
@@ -224,6 +224,6 @@ async def test_DeleteAsync_ShouldRaiseException_WhenRepositoryFails(service_with
     repo_mock.DeleteAsync.side_effect = Exception("Repository failure")
 
     with pytest.raises(Exception):
-        await service.DeleteAsync(uuid.uuid4(), session="session")
+        await service.DeleteAsync(str4(), session="session")
 
 # endregion

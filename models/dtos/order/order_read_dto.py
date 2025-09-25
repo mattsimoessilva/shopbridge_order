@@ -8,14 +8,16 @@ from decimal import Decimal
 
 
 class OrderReadDTO(BaseModel):
-    id: uuid.UUID
+    id: str
     created_at: datetime
     updated_at: Optional[datetime] = None
-    customer_id: uuid.UUID
+    customer_id: str
     shipment_id: Optional[str] = None
     total_amount: Decimal
     status: OrderStatus
     items: List[OrderItemReadDTO] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True 
+        use_enum_values = True
+        json_encoders = {str: lambda v: str(v)}

@@ -1,4 +1,4 @@
-from .entities.order import Order
+﻿from .entities.order import Order
 from .entities.order_item import OrderItem
 from .entities.address import Address
 from .entities.base import Base
@@ -6,8 +6,6 @@ from .entities.base import Base
 from .schemas.order.order_read_schema import OrderReadSchema
 from .schemas.order.order_create_schema import OrderCreateSchema
 from .schemas.order.order_update_schema import OrderUpdateSchema
-from .schemas.order.order_request_schema import OrderRequestSchema
-from .schemas.order.order_response_schema import OrderResponseSchema
 from .schemas.address.address_create_schema import AddressCreateSchema
 from .schemas.address.address_update_schema import AddressUpdateSchema
 from .schemas.address.address_read_schema import AddressReadSchema
@@ -27,7 +25,7 @@ from .enums.order_status import OrderStatus
 
 __all__ = [
     "Order", "OrderItem", "Address", "Base",
-    "OrderCreateSchema", "OrderReadSchema", "OrderUpdateSchema", "OrderRequestSchema", "OrderResponseSchema", "AddressCreateSchema", "AddresaUpdateSchema", "AddressReadSchema", "OrderItemReadSchema",
+    "OrderCreateSchema", "OrderReadSchema", "OrderUpdateSchema", "AddressCreateSchema", "AddresaUpdateSchema", "AddressReadSchema", "OrderItemReadSchema",
     "OrderCreateDTO", "OrderReadDTO", "OrderUpdateDTO", "AddressCreateDTO", "AddressReadDTO", "AddressUpdateDTO", "OrderItemCreateDTO", "OrderItemReadDTO", "OrderItemUpdateDTO",
     "OrderStatus"
 ]

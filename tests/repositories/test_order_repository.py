@@ -1,4 +1,4 @@
-import pytest
+﻿import pytest
 import uuid
 from unittest.mock import AsyncMock, MagicMock
 from repositories.order_repository_impl import OrderRepository
@@ -32,7 +32,7 @@ async def test_AddAsync_ShouldPersistAndReturnEntity(get_repository):
     # Arrange
     repo = get_repository
     session_mock = AsyncMock()
-    entity = Order(id=uuid.uuid4())
+    entity = Order(id=str4())
 
     # Act
     result = await repo.AddAsync(entity, session=session_mock)
@@ -70,7 +70,7 @@ async def test_GetAllAsync_ShouldReturnList_WhenRecordsExist(get_repository):
     # Arrange
     repo = get_repository
     session_mock = AsyncMock()
-    orders = [Order(id=uuid.uuid4()), Order(id=uuid.uuid4())]
+    orders = [Order(id=str4()), Order(id=str4())]
     execute_result = MagicMock()
     execute_result.scalars.return_value.all.return_value = orders
     session_mock.execute.return_value = execute_result
@@ -105,7 +105,7 @@ async def test_GetByIdAsync_ShouldReturnEntity_WhenRecordExists(get_repository):
     # Arrange
     repo = get_repository
     session_mock = AsyncMock()
-    order_id = uuid.uuid4()
+    order_id = str4()
     order = Order(id=order_id)
     execute_result = MagicMock()
     execute_result.scalars.return_value.first.return_value = order
@@ -124,7 +124,7 @@ async def test_GetByIdAsync_ShouldReturnNone_WhenRecordDoesNotExist(get_reposito
     # Arrange
     repo = get_repository
     session_mock = AsyncMock()
-    order_id = uuid.uuid4()
+    order_id = str4()
     execute_result = MagicMock()
     execute_result.scalars.return_value.first.return_value = None
     session_mock.execute.return_value = execute_result
@@ -159,7 +159,7 @@ async def test_UpdateAsync_ShouldReturnFalse_WhenRecordDoesNotExist(get_reposito
     # Arrange
     repo = get_repository
     session_mock = AsyncMock()
-    updated = Order(id=uuid.uuid4())
+    updated = Order(id=str4())
     repo.GetByIdAsync = AsyncMock(return_value=None)
 
     # Act
@@ -175,7 +175,7 @@ async def test_UpdateAsync_ShouldPersistChanges_WhenUpdateSucceeds(get_repositor
     # Arrange
     repo = get_repository
     session_mock = AsyncMock()
-    updated = Order(id=uuid.uuid4())
+    updated = Order(id=str4())
     existing = Order(id=updated.id)
     repo.GetByIdAsync = AsyncMock(return_value=existing)
 
@@ -209,7 +209,7 @@ async def test_DeleteAsync_ShouldReturnFalse_WhenRecordDoesNotExist(get_reposito
     # Arrange
     repo = get_repository
     session_mock = AsyncMock()
-    order_id = uuid.uuid4()
+    order_id = str4()
     repo.GetByIdAsync = AsyncMock(return_value=None)
 
     # Act
@@ -225,7 +225,7 @@ async def test_DeleteAsync_ShouldRemoveRecord_WhenDeleteSucceeds(get_repository)
     # Arrange
     repo = get_repository
     session_mock = AsyncMock()
-    order_id = uuid.uuid4()
+    order_id = str4()
     existing = Order(id=order_id)
     repo.GetByIdAsync = AsyncMock(return_value=existing)
 

@@ -1,6 +1,6 @@
-from abc import ABC, abstractmethod
+﻿from abc import ABC, abstractmethod
 from typing import List, Optional
-from uuid import UUID
+
 
 from models.entities.order import Order
 
@@ -17,7 +17,7 @@ class OrderRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    async def GetByIdAsync(self, id: UUID) -> Optional[Order]:
+    async def GetByIdAsync(self, id: str) -> Optional[Order]:
         """Retrieve a single Order entity by its ID."""
         pass
 
@@ -27,6 +27,6 @@ class OrderRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    async def DeleteAsync(self, id: UUID) -> bool:
+    async def DeleteAsync(self, id: str) -> bool:
         """Delete an Order entity by its ID. Returns True if successful."""
         pass

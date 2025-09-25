@@ -1,24 +1,11 @@
-from marshmallow import Schema, fields, validate
+﻿from pydantic import BaseModel, Field, constr
+from typing import Optional
 
-class AddressUpdateSchema(Schema):
-    id = fields.UUID(required=True)
-    street = fields.String(
-        required=False,
-        validate=validate.Length(max=100)
-    )
-    city = fields.String(
-        required=False,
-        validate=validate.Length(max=50)
-    )
-    state = fields.String(
-        required=False,
-        validate=validate.Length(max=50)
-    )
-    postal_code = fields.String(
-        required=False,
-        validate=validate.Length(max=20)
-    )
-    country = fields.String(
-        required=False,
-        validate=validate.Length(max=50)
-    )
+
+class AddressUpdateSchema(BaseModel):
+    id: str = Field(..., description="Unique identifier of the address to update")
+    street: Optional[constr(max_length=100)] = Field(None, description="Street address")
+    city: Optional[constr(max_length=50)] = Field(None, description="City")
+    state: Optional[constr(max_length=50)] = Field(None, description="State or province")
+    postal_code: Optional[constr(max_length=20)] = Field(None, description="Postal or ZIP code")
+    country: Optional[constr(max_length=50)] = Field(None, description="Country")

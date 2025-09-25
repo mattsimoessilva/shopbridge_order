@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+﻿from pydantic import BaseModel, Field
 import uuid
 
 class AddressCreateDTO(BaseModel):
@@ -8,3 +8,8 @@ class AddressCreateDTO(BaseModel):
     state: str = Field(..., max_length=50)
     postal_code: str = Field(..., max_length=20)
     country: str = Field(..., max_length=50)
+
+    class Config:
+        from_attributes = True 
+        use_enum_values = True
+        json_encoders = {str: lambda v: str(v)}

@@ -1,27 +1,15 @@
-﻿from marshmallow import Schema, fields, validate
+﻿from datetime import datetime
+from pydantic import BaseModel, Field, constr
+from typing import Optional
 
-class AddressReadSchema(Schema):
-    id = fields.UUID(required=True)
-    customer_id = fields.String(required=True)
-    street = fields.String(
-        required=True,
-        validate=validate.Length(max=100)
-    )
-    city = fields.String(
-        required=True,
-        validate=validate.Length(max=50)
-    )
-    state = fields.String(
-        required=True,
-        validate=validate.Length(max=50)
-    )
-    postal_code = fields.String(
-        required=True,
-        validate=validate.Length(max=20)
-    )
-    country = fields.String(
-        required=True,
-        validate=validate.Length(max=50)
-    )
-    created_at = fields.DateTime(required=True)
-    updated_at = fields.DateTime(allow_none=True)
+
+class AddressReadSchema(BaseModel):
+    id: str = Field(..., description="Unique identifier of the address")
+    customer_id: str = Field(..., description="ID of the customer associated with the address")
+    street: constr(max_length=100) = Field(..., description="Street address")
+    city: constr(max_length=50) = Field(..., description="City")
+    state: constr(max_length=50) = Field(..., description="State or province")
+    postal_code: constr(max_length=20) = Field(..., description="Postal or ZIP code")
+    country: constr(max_length=50) = Field(..., description="Country")
+    created_at: datetime = Field(..., description="Timestamp when the address was created")
+    updated_at: Optional[datetime] = Field(None, description="Timestamp when the address was last updated")

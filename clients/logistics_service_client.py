@@ -9,23 +9,24 @@ class LogisticsServiceClient:
     def __init__(self, base_url: str):
         self._base_url = base_url.rstrip("/")
         self._session: Optional[aiohttp.ClientSession] = None
-        self._loop: Optional[asyncio.AbstractEventLoop] = None
 
+    async def __aenter__(self):
+        self._session = aiohttp.ClientSession()
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        if self._session and not self._session.closed:
+            await self._session.close()
+
+    async def open(self):
+        return await self.__aenter__()
+
+    async def close(self):
+        await self.__aexit__(None, None, None)
 
     async def _get_session(self) -> aiohttp.ClientSession:
-        loop = asyncio.get_running_loop()
-
-        if (
-            self._session is None
-            or self._session.closed
-            or self._loop is not loop
-        ):
-            if self._session and not self._session.closed:
-                await self._session.close()
-
-            self._session = aiohttp.ClientSession()
-            self._loop = loop
-
+        if not self._session or self._session.closed:
+            raise RuntimeError("LogisticsServiceClient is not open or already closed.")
         return self._session
 
 
@@ -107,10 +108,6 @@ class LogisticsServiceClient:
 
             return None
 
-    async def close(self):
-        if self._session and not self._session.closed:
-            await self._session.close()
-
     async def check_availability(
         self,
         street: str,
@@ -130,7 +127,9 @@ class LogisticsServiceClient:
             "country": country
         }
 
-        async with session.post(url, json=payload, timeout=5) as resp:
+        timeout = aiohttp.ClientTimeout(total=5)
+
+        async with session.post(url, json=payload, timeout=timeout) as resp:
             text_body = await resp.text()
 
             if resp.status == 400:

@@ -1,6 +1,6 @@
-from abc import ABC, abstractmethod
+﻿from abc import ABC, abstractmethod
 from typing import List, Optional
-from uuid import UUID
+
 
 from models.entities.address import Address
 
@@ -17,12 +17,12 @@ class AddressRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    async def GetByIdAsync(self, id: UUID) -> Optional[Address]:
+    async def GetByIdAsync(self, id: str) -> Optional[Address]:
         """Retrieve a single Address entity by its ID."""
         pass
 
     @abstractmethod
-    async def GetByCustomerIdAsync(self, customer_id: UUID) -> Optional[Address]:
+    async def GetByCustomerIdAsync(self, customer_id: str) -> Optional[Address]:
         """Retrive a single Address entity by its customer_id field"""
         pass
 
@@ -32,6 +32,6 @@ class AddressRepositoryInterface(ABC):
         pass
 
     @abstractmethod
-    async def DeleteAsync(self, id: UUID) -> bool:
+    async def DeleteAsync(self, id: str) -> bool:
         """Delete an Address entity by its ID. Returns True if successful."""
         pass

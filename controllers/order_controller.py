@@ -1,130 +1,107 @@
-﻿from uuid import UUID
-from flask import g, jsonify, current_app
-from flask_smorest import Blueprint
+﻿
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.schemas.order.order_create_schema import OrderCreateSchema
 from models.schemas.order.order_update_schema import OrderUpdateSchema
 from models.schemas.order.order_read_schema import OrderReadSchema
 from models.schemas.order.order_patch_schema import OrderPatchSchema
 
+from core.dependencies import get_db, get_order_service
+from services.order_service_impl import OrderService
 
-blp = Blueprint(
-    "orders",
-    "orders",
-    url_prefix="/api/orders",
-    description="Operations on Orders"
+order_router = APIRouter(
+    prefix="/api/orders",
+    tags=["orders"],
+    responses={404: {"description": "Not found"}},
 )
 
 
-@blp.route("/", methods=["POST"])
-@blp.arguments(OrderCreateSchema)
-@blp.response(201, OrderReadSchema)
-async def Create(data):
-    """Creates a new Order."""
+@order_router.post("/", response_model=OrderReadSchema, status_code=status.HTTP_201_CREATED)
+async def create_order(
+    data: OrderCreateSchema,
+    session: AsyncSession = Depends(get_db),
+    service: OrderService = Depends(get_order_service),
+):
     try:
-        session = g.db
-        service = current_app.extensions["order_service"]
-
-        result = await service.CreateAsync(data, session=session)
-        return result
-
+        return await service.CreateAsync(data, session=session)
     except ValueError as ex:
-        return jsonify({"error": str(ex)}), 400
-
+        raise HTTPException(status_code=400, detail=str(ex))
     except Exception as ex:
-        return jsonify({"error": str(ex)}), 500
+        raise HTTPException(status_code=500, detail=str(ex))
 
 
-@blp.route("/", methods=["GET"])
-@blp.response(200, OrderReadSchema(many=True))
-async def GetAll():
-    """Retrieves all Orders."""
+@order_router.get("/", response_model=list[OrderReadSchema])
+async def get_all_orders(
+    session: AsyncSession = Depends(get_db),
+    service: OrderService = Depends(get_order_service),
+):
     try:
-        session = g.db
-        service = current_app.extensions["order_service"]
-
-        result = await service.GetAllAsync(session=session)
-        return result
-
+        return await service.GetAllAsync(session=session)
     except Exception as ex:
-        return jsonify({"error": str(ex)}), 500
+        raise HTTPException(status_code=500, detail=str(ex))
 
 
-@blp.route("/<uuid:id>", methods=["GET"])
-@blp.response(200, OrderReadSchema)
-async def GetById(id: UUID):
-    """Retrieves a specific Order by ID."""
+@order_router.get("/{id}", response_model=OrderReadSchema)
+async def get_order_by_id(
+    id: str,
+    session: AsyncSession = Depends(get_db),
+    service: OrderService = Depends(get_order_service),
+):
     try:
-        session = g.db
-        service = current_app.extensions["order_service"]
-
         dto = await service.GetByIdAsync(id, session=session)
         if dto is None:
-            return jsonify({"message": "Record not found"}), 404
-
+            raise HTTPException(status_code=404, detail="Record not found")
         return dto
-
     except Exception as ex:
-        return jsonify({"error": str(ex)}), 500
+        raise HTTPException(status_code=500, detail=str(ex))
 
 
-@blp.route("/<uuid:id>", methods=["PUT"])
-@blp.arguments(OrderUpdateSchema)
-@blp.response(200)
-async def Update(data, id):
-    """Updates an Order record."""
+@order_router.put("/{id}", status_code=status.HTTP_200_OK)
+async def update_order(
+    id: str,
+    data: OrderUpdateSchema,
+    session: AsyncSession = Depends(get_db),
+    service: OrderService = Depends(get_order_service),
+):
     try:
-        session = g.db
-        service = current_app.extensions["order_service"]
-
         success = await service.UpdateAsync(data, session=session)
         if not success:
-            return jsonify({"message": "Record not found"}), 404
-
-        return {}, 200
-
+            raise HTTPException(status_code=404, detail="Record not found")
+        return {"message": "Updated successfully"}
     except ValueError as ex:
-        return jsonify({"error": str(ex)}), 400
-
+        raise HTTPException(status_code=400, detail=str(ex))
     except Exception as ex:
-        return jsonify({"error": str(ex)}), 500
+        raise HTTPException(status_code=500, detail=str(ex))
 
 
-@blp.route("/<uuid:id>", methods=["DELETE"])
-@blp.response(204)
-async def Delete(id: UUID):
-    """Deletes an Order by ID."""
+@order_router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_order(
+    id: str,
+    session: AsyncSession = Depends(get_db),
+    service: OrderService = Depends(get_order_service),
+):
     try:
-        session = g.db
-        service = current_app.extensions["order_service"]
-
         deleted = await service.DeleteAsync(id, session=session)
         if not deleted:
-            return jsonify({"message": "Record not found"}), 404
-
-        return "", 204
-
+            raise HTTPException(status_code=404, detail="Record not found")
     except Exception as ex:
-        return jsonify({"error": str(ex)}), 500
+        raise HTTPException(status_code=500, detail=str(ex))
 
-@blp.route("/<uuid:id>/status", methods=["PATCH"])
-@blp.arguments(OrderPatchSchema(partial=True))
-@blp.response(200, OrderReadSchema)
-async def Patch(data, id: UUID):
-    """Partially updates an Order (e.g., status transitions)."""
+
+@order_router.patch("/{id}/status", response_model=OrderReadSchema)
+async def patch_order_status(
+    id: str,
+    data: OrderPatchSchema,
+    session: AsyncSession = Depends(get_db),
+    service: OrderService = Depends(get_order_service),
+):
     try:
-        session = g.db
-        service = current_app.extensions["order_service"]
-
         updated = await service.PatchAsync(id, data, session=session)
         if not updated:
-            return jsonify({"message": "Record not found"}), 404
-
-        dto = await service.GetByIdAsync(id, session=session)
-        return dto
-
+            raise HTTPException(status_code=404, detail="Record not found")
+        return await service.GetByIdAsync(id, session=session)
     except ValueError as ex:
-        return jsonify({"error": str(ex)}), 400
-
+        raise HTTPException(status_code=400, detail=str(ex))
     except Exception as ex:
-        return jsonify({"error": str(ex)}), 500
+        raise HTTPException(status_code=500, detail=str(ex))

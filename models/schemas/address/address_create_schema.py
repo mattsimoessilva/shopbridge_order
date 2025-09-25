@@ -1,26 +1,9 @@
-from marshmallow import Schema, fields, validate
+﻿from pydantic import BaseModel, Field, constr
 
-
-class AddressCreateSchema(Schema):
-    customer_id = fields.String(required=True)
-    street = fields.String(
-        required=True,
-        validate=validate.Length(max=100)
-    )
-    city = fields.String(
-        required=True,
-        validate=validate.Length(max=50)
-    )
-    state = fields.String(
-        required=True,
-        validate=validate.Length(max=50)
-    )
-    postal_code = fields.String(
-        required=True,
-        validate=validate.Length(max=20)
-    )
-    country = fields.String(
-        required=True,
-        validate=validate.Length(max=50)
-    )
-
+class AddressCreateSchema(BaseModel):
+    customer_id: str = Field(..., description="ID of the customer associated with the address")
+    street: constr(max_length=100) = Field(..., description="Street address")
+    city: constr(max_length=50) = Field(..., description="City")
+    state: constr(max_length=50) = Field(..., description="State or province")
+    postal_code: constr(max_length=20) = Field(..., description="Postal or ZIP code")
+    country: constr(max_length=50) = Field(..., description="Country")
