@@ -1,4 +1,4 @@
-# Use an official Python runtime as a parent image
+﻿# Use an official Python runtime as a parent image
 FROM python:3.11-slim
 
 # Set environment variables to prevent Python from writing pyc files and to buffer stdout/stderr
@@ -24,8 +24,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose the port Hypercorn will listen on
-EXPOSE 8000
+EXPOSE 80
 
 # Command to run the app with Hypercorn
 # Adjust the module path if your app is in a package (e.g., "myapp.app:app")
-CMD ["hypercorn", "app:app", "--bind", "0.0.0.0:8000", "--worker-class", "asyncio"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "80"]

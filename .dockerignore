@@ -1,0 +1,35 @@
+﻿# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# SQLite database files
+*.db
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Environment and secret files
+.env
+*.env
+
+# IDE/editor folders
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Git and version control
+.git/
+.gitignore
+
+# Test and coverage artifacts
+tests/
+*.log
+coverage/
+htmlcov/
