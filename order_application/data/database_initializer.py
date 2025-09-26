@@ -11,8 +11,10 @@ from models.entities import Address
 from models.entities import Order
 from models.entities import OrderItem
 from models.enums import OrderStatus
+import os
 
-DATABASE_URL = "sqlite+aiosqlite:///./order_application/storage/database.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE_URL = f"sqlite+aiosqlite:///{os.path.join(BASE_DIR, 'storage', 'database.db')}"
 
 async def initialize_database():
     engine = create_async_engine(DATABASE_URL, echo=True, future=True)

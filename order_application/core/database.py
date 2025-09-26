@@ -1,8 +1,10 @@
 ﻿# core/database.py
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+import os
 
-DATABASE_URL = "sqlite+aiosqlite:///./order_application/storage/database.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE_URL = f"sqlite+aiosqlite:///{os.path.join(BASE_DIR, 'storage', 'database.db')}"
 
 # Create async engine
 async_engine = create_async_engine(

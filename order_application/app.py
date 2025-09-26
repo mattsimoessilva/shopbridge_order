@@ -14,10 +14,12 @@ from services import AddressService
 from clients import ProductServiceClient
 from clients import LogisticsServiceClient
 from dotenv import load_dotenv
+import os 
 
 load_dotenv()
 
-DATABASE_URL = "sqlite+aiosqlite:///./order_application/storage/database.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE_URL = f"sqlite+aiosqlite:///{os.path.join(BASE_DIR, 'storage', 'database.db')}"
 
 # --- Database setup ---
 engine = create_async_engine(DATABASE_URL, echo=True, future=True)
