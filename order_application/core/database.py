@@ -1,19 +1,11 @@
-﻿from pathlib import Path
-import yaml
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+﻿from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+from pathlib import Path
+from config import DATABASE_URL
 
-# --- Load configuration ---
-CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.yaml"
-if not CONFIG_PATH.exists():
-    raise FileNotFoundError(f"Config file not found: {CONFIG_PATH}")
-
-with open(CONFIG_PATH, "r") as f:
-    config = yaml.safe_load(f)
-
-database_name = config.get("database_name", "database.db")
-DATABASE_PATH = Path(__file__).resolve().parent.parent / "storage" / database_name
-DATABASE_URL = f"sqlite+aiosqlite:///{DATABASE_PATH}"
+# --- Ensure storage directory exists ---
+db_path = Path(DATABASE_URL.replace("sqlite+aiosqlite:///", ""))
+db_path.parent.mkdir(parents=True, exist_ok=True)
 
 # --- Create async engine ---
 async_engine = create_async_engine(DATABASE_URL, echo=True, future=True)

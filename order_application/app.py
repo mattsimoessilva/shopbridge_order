@@ -1,6 +1,5 @@
 ﻿import asyncio
 from pathlib import Path
-import yaml
 from fastapi import FastAPI, Depends
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
@@ -13,23 +12,7 @@ from clients import ProductServiceClient, LogisticsServiceClient
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
-
-# --- Load YAML configuration ---
-CONFIG_PATH = Path(__file__).resolve().parent / "config.yaml"
-
-if not CONFIG_PATH.exists():
-    raise FileNotFoundError(f"Config file not found: {CONFIG_PATH}")
-
-with open(CONFIG_PATH, "r") as f:
-    config = yaml.safe_load(f)
-
-DATABASE_PATH = Path(__file__).resolve().parent / "storage" / config.get("database_name", "database.db")
-DATABASE_URL = f"sqlite+aiosqlite:///{DATABASE_PATH}"
-
-APP_HOST = config.get("host", "0.0.0.0")
-APP_PORT = config.get("port", 3000)
-DEBUG_MODE = config.get("debug", True)
+from config import DATABASE_URL, HOST, PORT, DEBUG, PRODUCT_SERVICE_URL, LOGISTICS_SERVICE_URL
 
 # --- Database setup ---
 engine = create_async_engine(DATABASE_URL, echo=True, future=True)
@@ -52,9 +35,9 @@ def create_app() -> FastAPI:
     address_repository = AddressRepository(session_factory=async_session_factory)
     order_repository = OrderRepository(session_factory=async_session_factory)
 
-    # Initialize clients
-    product_client = ProductServiceClient(base_url=config.get("product_service_url", "http://localhost:5000/api/"))
-    logistics_client = LogisticsServiceClient(base_url=config.get("logistics_service_url", "http://localhost:8000/api/"))
+    # Initialize clients using config.py URLs
+    product_client = ProductServiceClient(base_url=PRODUCT_SERVICE_URL)
+    logistics_client = LogisticsServiceClient(base_url=LOGISTICS_SERVICE_URL)
 
     # Initialize services
     address_service = AddressService(repository=address_repository)
@@ -106,4 +89,4 @@ async def shutdown_event():
 # --- Run with uvicorn ---
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", host=APP_HOST, port=APP_PORT, reload=DEBUG_MODE)
+    uvicorn.run("app:app", host=HOST, port=PORT, reload=DEBUG)

@@ -2,6 +2,8 @@
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
+from config import DATABASE_URL
+from pathlib import Path
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
@@ -42,14 +44,9 @@ async def initialize_database(database_url: str):
 
 
 if __name__ == "__main__":
-    import yaml
-    from pathlib import Path
+    # Ensure storage directory exists
+    db_file = Path(DATABASE_URL.replace("sqlite+aiosqlite:///", ""))
+    db_file.parent.mkdir(parents=True, exist_ok=True)
 
-    CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.yaml"
-    with open(CONFIG_PATH, "r") as f:
-        config = yaml.safe_load(f)
-
-    db_path = Path(__file__).resolve().parent / config.get("database_name", "database.db")
-    DATABASE_URL = f"sqlite+aiosqlite:///{db_path}"
-
+    # Initialize the database
     asyncio.run(initialize_database(DATABASE_URL))
