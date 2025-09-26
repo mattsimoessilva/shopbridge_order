@@ -12,9 +12,10 @@ from models.entities import Order
 from models.entities import OrderItem
 from models.enums import OrderStatus
 
+DATABASE_URL = "sqlite+aiosqlite:///./order_application/data/database.db"
 
 async def initialize_database():
-    engine = create_async_engine("sqlite+aiosqlite:///./database.db", echo=True, future=True)
+    engine = create_async_engine(DATABASE_URL, echo=True, future=True)
     async_session_factory = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
     async with engine.begin() as conn:
