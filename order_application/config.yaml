@@ -1,0 +1,6 @@
+﻿database_name: "database.db"
+host: "0.0.0.0"
+port: 3000
+debug: true
+product_service_url: "http://localhost:5000/api/"
+logistics_service_url: "http://localhost:8000/api/"

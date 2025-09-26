@@ -11,13 +11,10 @@ from models.entities import Address
 from models.entities import Order
 from models.entities import OrderItem
 from models.enums import OrderStatus
-import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE_URL = f"sqlite+aiosqlite:///{os.path.join(BASE_DIR, 'storage', 'database.db')}"
 
-async def initialize_database():
-    engine = create_async_engine(DATABASE_URL, echo=True, future=True)
+async def initialize_database(database_url: str):
+    engine = create_async_engine(database_url, echo=True, future=True)
     async_session_factory = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
     async with engine.begin() as conn:
@@ -45,4 +42,14 @@ async def initialize_database():
 
 
 if __name__ == "__main__":
-    asyncio.run(initialize_database())
+    import yaml
+    from pathlib import Path
+
+    CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.yaml"
+    with open(CONFIG_PATH, "r") as f:
+        config = yaml.safe_load(f)
+
+    db_path = Path(__file__).resolve().parent / config.get("database_name", "database.db")
+    DATABASE_URL = f"sqlite+aiosqlite:///{db_path}"
+
+    asyncio.run(initialize_database(DATABASE_URL))
