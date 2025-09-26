@@ -3,7 +3,7 @@ import os
 from sqlalchemy.ext.asyncio import create_async_engine
 from models.entities.base import Base
 
-DATABASE_FILE = "./order.db"
+DATABASE_FILE = "./database.db"
 DATABASE_URL = f"sqlite+aiosqlite:///{DATABASE_FILE}"
 
 async def recreate_db():
