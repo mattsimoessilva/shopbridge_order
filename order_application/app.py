@@ -94,7 +94,7 @@ async def startup_event():
         address_exists = (await session.execute(select(Address))).scalars().first() is not None
         order_exists = (await session.execute(select(Order))).scalars().first() is not None
         if not address_exists and not order_exists:
-            await initialize_database()
+            await initialize_database(DATABASE_URL)
 
 @app.on_event("shutdown")
 async def shutdown_event():
