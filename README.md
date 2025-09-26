@@ -66,6 +66,24 @@ flowchart TD
     C --> F
     D --> E
     F --> G
+
+    %% Node styles
+    style A fill:#007acc,stroke:#0059b3,color:#ffffff,stroke-width:2px
+    style B fill:#e6f2ff,stroke:#004080,color:#004080,stroke-width:2px
+    style C fill:#e6f2ff,stroke:#004080,color:#004080,stroke-width:2px
+    style D fill:#e6f2ff,stroke:#004080,color:#004080,stroke-width:2px
+    style F fill:#e6f2ff,stroke:#004080,color:#004080,stroke-width:2px
+    style E fill:#007acc,stroke:#0059b3,color:#ffffff,stroke-width:2px
+    style G fill:#007acc,stroke:#0059b3,color:#ffffff,stroke-width:2px
+
+    %% Arrow styles
+    linkStyle 0 stroke:#007acc,stroke-width:2px
+    linkStyle 1 stroke:#007acc,stroke-width:2px
+    linkStyle 2 stroke:#007acc,stroke-width:2px
+    linkStyle 3 stroke:#007acc,stroke-width:2px
+    linkStyle 4 stroke:#007acc,stroke-width:2px
+    linkStyle 5 stroke:#007acc,stroke-width:2px
+
 ```
 
 </p>
