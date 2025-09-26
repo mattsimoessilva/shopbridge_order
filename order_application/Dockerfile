@@ -28,4 +28,4 @@ EXPOSE 80
 
 # Command to run the app with Hypercorn
 # Adjust the module path if your app is in a package (e.g., "myapp.app:app")
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${ORDER_SERVICE_PORT}"]
