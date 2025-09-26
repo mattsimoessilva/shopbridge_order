@@ -12,7 +12,7 @@ from models.entities import Order
 from models.entities import OrderItem
 from models.enums import OrderStatus
 
-DATABASE_URL = "sqlite+aiosqlite:///./order_application/data/database.db"
+DATABASE_URL = "sqlite+aiosqlite:///./order_application/storage/database.db"
 
 async def initialize_database():
     engine = create_async_engine(DATABASE_URL, echo=True, future=True)

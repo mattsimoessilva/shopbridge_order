@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = "sqlite+aiosqlite:///./order_application/data/database.db"
+DATABASE_URL = "sqlite+aiosqlite:///./order_application/storage/database.db"
 
 # --- Database setup ---
 engine = create_async_engine(DATABASE_URL, echo=True, future=True)
