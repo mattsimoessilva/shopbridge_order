@@ -2,6 +2,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import async_session_factory
+import config
 from repositories import OrderRepository
 from repositories import AddressRepository
 from services import OrderService
@@ -27,11 +28,11 @@ def get_address_repository() -> AddressRepository:
 
 # --- Client Dependencies ---
 def get_product_client() -> ProductServiceClient:
-    return ProductServiceClient(base_url="http://localhost:5000/api/")  # adjust base_url
+    return ProductServiceClient(base_url=config.PRODUCT_SERVICE_URL)  
 
 
 def get_logistics_client() -> LogisticsServiceClient:
-    return LogisticsServiceClient(base_url="http://localhost:8000/api/")  # adjust base_url
+    return LogisticsServiceClient(base_url=config.LOGISTICS_SERVICE_URL)  
 
 
 # --- Service Dependencies ---
