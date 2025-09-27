@@ -48,14 +48,14 @@ async def get_all_addresses(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@address_router.get("/{address_id}", response_model=AddressReadSchema)
+@address_router.get("/{id}", response_model=AddressReadSchema)
 async def get_address_by_id(
-    address_id: str,
+    id: str,
     session: AsyncSession = Depends(get_database),
     service: AddressService = Depends(get_address_service),
 ):
     try:
-        dto = await service.GetByIdAsync(address_id, session=session)
+        dto = await service.GetByIdAsync(id, session=session)
         if dto is None:
             raise HTTPException(status_code=404, detail="Address not found")
         return dto
@@ -88,14 +88,14 @@ async def update_address(
 
 
 
-@address_router.delete("/{address_id}", status_code=status.HTTP_204_NO_CONTENT)
+@address_router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_address(
-    address_id: str,
+    id: str,
     session: AsyncSession = Depends(get_database),
     service: AddressService = Depends(get_address_service),
 ):
     try:
-        deleted = await service.DeleteAsync(address_id, session=session)
+        deleted = await service.DeleteAsync(id, session=session)
         if not deleted:
             raise HTTPException(status_code=404, detail="Address not found")
     except ValueError as e:
