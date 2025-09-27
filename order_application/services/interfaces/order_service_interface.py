@@ -27,7 +27,7 @@ class OrderServiceInterface(ABC):
         pass
 
     @abstractmethod
-    async def UpdateAsync(self, dto: OrderUpdateDTO, session: AsyncSession) -> bool:
+    async def UpdateAsync(self, id: str, dto: OrderUpdateDTO, session: AsyncSession) -> bool:
         """Update an existing record. Returns True if successful."""
         pass
 

@@ -173,9 +173,7 @@ class OrderService(OrderServiceInterface):
     async def DeleteAsync(self, id: str, session) -> bool:
         if not id:
             raise ValueError("Record identifier cannot be empty.")
-
         return await self._repository.DeleteAsync(id, session=session)
-
 
     async def PatchAsync(self, id: str, dto: OrderPatchDTO, session) -> bool:
         if isinstance(dto, dict):

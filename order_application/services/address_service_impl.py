@@ -84,13 +84,13 @@ class AddressService(AddressServiceInterface):
             updated_at=entity.updated_at
         )
 
-    async def UpdateAsync(self, dto: AddressUpdateDTO, session) -> bool:
-        if dto is None or not dto.id:
+    async def UpdateAsync(self, id: str, dto: AddressUpdateDTO, session) -> bool:
+        if dto is None or not id:
             raise ValueError("Record data cannot be null or missing an identifier.")
         if isinstance(dto, dict):
             dto = AddressUpdateDTO(**dto)
 
-        existing = await self._repository.GetByIdAsync(dto.id, session=session)
+        existing = await self._repository.GetByIdAsync(id, session=session)
         if existing is None:
             return False
 

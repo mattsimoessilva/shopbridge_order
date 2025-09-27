@@ -30,7 +30,8 @@ async def create_order(
     except RuntimeError as e:
         raise HTTPException(status_code=502, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @order_router.get("/", response_model=list[OrderReadSchema])
 async def get_all_orders(
@@ -44,7 +45,8 @@ async def get_all_orders(
     except RuntimeError as e:
         raise HTTPException(status_code=502, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @order_router.get("/{id}", response_model=OrderReadSchema)
@@ -63,7 +65,8 @@ async def get_order_by_id(
     except RuntimeError as e:
         raise HTTPException(status_code=502, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
@@ -75,16 +78,16 @@ async def update_order(
     service: OrderService = Depends(get_order_service),
 ):
     try:
-        success = await service.UpdateAsync(data, session=session)
+        success = await service.UpdateAsync(id, data, session=session)
         if not success:
             raise HTTPException(status_code=404, detail="Record not found")
-        return {"message": "Updated successfully"}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=502, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
@@ -103,7 +106,8 @@ async def delete_order(
     except RuntimeError as e:
         raise HTTPException(status_code=502, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
@@ -115,14 +119,12 @@ async def patch_order_status(
     service: OrderService = Depends(get_order_service),
 ):
     try:
-        updated = await service.PatchAsync(id, data, session=session)
-        if not updated:
+        deleted = await service.DeleteAsync(id, session=session)
+        if not deleted:
             raise HTTPException(status_code=404, detail="Record not found")
-        return await service.GetByIdAsync(id, session=session)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=502, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
-
+        raise HTTPException(status_code=500, detail=str(e))

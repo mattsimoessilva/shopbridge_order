@@ -28,7 +28,7 @@ class AddressServiceInterface(ABC):
         pass
 
     @abstractmethod
-    async def UpdateAsync(self, dto: AddressUpdateDTO, session: AsyncSession) -> bool:
+    async def UpdateAsync(self, id: str, dto: AddressUpdateDTO, session: AsyncSession) -> bool:
         """Update an existing address. Returns True if successful."""
         pass
 

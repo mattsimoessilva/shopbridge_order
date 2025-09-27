@@ -24,10 +24,13 @@ async def create_address(
 ):
     try:
         return await service.CreateAsync(address_data, session=session)
-    except ValueError as ex:
-        raise HTTPException(status_code=400, detail=str(ex))
-    except Exception as ex:
-        raise HTTPException(status_code=500, detail=str(ex))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @address_router.get("/", response_model=list[AddressReadSchema])
@@ -37,8 +40,12 @@ async def get_all_addresses(
 ):
     try:
         return await service.GetAllAsync(session=session)
-    except Exception as ex:
-        raise HTTPException(status_code=500, detail=str(ex))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @address_router.get("/{address_id}", response_model=AddressReadSchema)
@@ -52,25 +59,33 @@ async def get_address_by_id(
         if dto is None:
             raise HTTPException(status_code=404, detail="Address not found")
         return dto
-    except Exception as ex:
-        raise HTTPException(status_code=500, detail=str(ex))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-@address_router.put("/", status_code=status.HTTP_200_OK)
+@address_router.put("/{id}", status_code=status.HTTP_200_OK)
 async def update_address(
+    id: str,
     address_data: AddressUpdateSchema,
     session: AsyncSession = Depends(get_database),
     service: AddressService = Depends(get_address_service),
 ):
     try:
-        success = await service.UpdateAsync(address_data, session=session)
+        success = await service.UpdateAsync(id, address_data, session=session)
         if not success:
             raise HTTPException(status_code=404, detail="Address not found")
-        return {"message": "Updated successfully"}
-    except ValueError as ex:
-        raise HTTPException(status_code=400, detail=str(ex))
-    except Exception as ex:
-        raise HTTPException(status_code=500, detail=str(ex))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 
 @address_router.delete("/{address_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -83,5 +98,9 @@ async def delete_address(
         deleted = await service.DeleteAsync(address_id, session=session)
         if not deleted:
             raise HTTPException(status_code=404, detail="Address not found")
-    except Exception as ex:
-        raise HTTPException(status_code=500, detail=str(ex))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
