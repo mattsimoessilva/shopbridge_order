@@ -6,6 +6,20 @@ Developed using **FastAPI**, the service follows a layered architecture and adhe
 
 ---
 
+## Table of Contents
+ 
+- [Repository Structure](#repository-structure) 
+- [Service Design Overview](#service-design-overview)
+- [Prerequisites](#prerequisites) 
+- [Getting Started](#getting-started)  
+- [Managing the Database](#managing-the-database)
+- [Running Unit Tests](#running-unit-tests)
+- [API Endpoints](#api-endpoints)
+- [Notes](#notes) 
+- [References](#references) 
+
+---
+
 ## Repository Structure
 
 ```
@@ -102,6 +116,35 @@ flowchart TD
 - **Repositories** abstract persistence, making the service database-agnostic.  
 - **Migrations** ensure schema evolution is tracked and reproducible.  
 - **Tests** validate each layer independently (unit + integration).  
+
+---
+
+---
+
+## Prerequisites
+
+Before using this repository, ensure the following software is installed and properly configured:
+
+- **Python 3.9+**  
+  - Used to run the FastAPI application and scripts locally.  
+  - Ensure `python` and `pip` are correctly installed and available in your PATH.  
+  - Verify installation with:
+    ```bash
+    python --version
+    pip --version
+    ```
+
+- **Git** >= 2.30  
+  - Required for cloning the repository, managing submodules, and version control.  
+  - Recommended to configure your global username and email:
+    ```bash
+    git config --global user.name "Your Name"
+    git config --global user.email "you@example.com"
+    ```
+
+- **SQLite**  
+  - Used as the default local database for development and testing.  
+  - No separate installation is needed if using the Python `sqlite3` module (included in standard library).  
 
 ---
 
@@ -207,7 +250,7 @@ pytest -k "test_method_name"
 | POST   | `/api/orders`                 | Create a new order record.                  |
 | GET    | `/api/orders`                 | Retrieve all order records.                 |
 | GET    | `/api/orders/{id}`            | Retrieve an order record by its unique ID.  |
-| PUT    | `/api/orders`                 | Update an existing order record.            |
+| PUT    | `/api/orders/{id}`            | Update an existing order record by its unique ID.            |
 | DELETE | `/api/orders/{id}`            | Delete an order record by its unique ID.    |
 | PATCH  | `/api/orders/{id}/status`     | Update only the status of an order record.  |
 
@@ -220,7 +263,7 @@ pytest -k "test_method_name"
 | POST   | `/api/addresses`              | Create a new address record.                 |
 | GET    | `/api/addresses`              | Retrieve all address records.                |
 | GET    | `/api/addresses/{id}`         | Retrieve an address record by its unique ID. |
-| PUT    | `/api/addresses`              | Update an existing address record.           |
+| PUT    | `/api/addresses/{id}`         | Update an existing address record by its unique ID.           |
 | DELETE | `/api/addresses/{id}`         | Delete an address record by its unique ID.   |
 
 ---
@@ -240,4 +283,3 @@ All endpoints follow REST conventions and return appropriate HTTP status codes (
 ## References
 
 [1] S. Newman, *Building Microservices: Designing Fine-Grained Systems*. O’Reilly Media, 2015.  
-[2] Microsoft, *ASP.NET Core Documentation*, 2025. Available: https://docs.microsoft.com/aspnet/core.
