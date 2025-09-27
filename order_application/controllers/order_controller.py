@@ -119,9 +119,10 @@ async def patch_order_status(
     service: OrderService = Depends(get_order_service),
 ):
     try:
-        deleted = await service.DeleteAsync(id, session=session)
-        if not deleted:
+        updated = await service.PatchAsync(id, data, session=session)
+        if not updated:
             raise HTTPException(status_code=404, detail="Record not found")
+        return await service.GetByIdAsync(id, session=session)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except RuntimeError as e:
