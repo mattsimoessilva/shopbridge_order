@@ -59,7 +59,7 @@ class OrderService(OrderServiceInterface):
                 await self._product_client.reserve_product_stock(item.product_id, item.quantity)
 
         entity = Order(
-            id=str(uuid.uuid4),
+            id=str(uuid.uuid4()),
             customer_id=str(dto.customer_id),
             created_at=datetime.now(timezone.utc),
             status=OrderStatus.PENDING,
@@ -231,7 +231,7 @@ class OrderService(OrderServiceInterface):
                     raise ValueError("Cannot move to IN_TRANSIT: shipment does not exist.")
 
                 shipment_status_response = await self._logistics_client.get_shipment(existing.shipment_id)
-                if not shipment_status_response or shipment_status_response.get("status") != "Dispatched":
+                if not shipment_status_response or shipment_status_response.get("status") != "InTransit":
                     raise ValueError("Shipment is not yet dispatched; cannot move order to IN_TRANSIT.")
 
                 existing.status = OrderStatus.IN_TRANSIT

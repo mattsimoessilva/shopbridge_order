@@ -5,17 +5,17 @@ from unittest.mock import ANY
 from copy import deepcopy
 from decimal import Decimal
 
-VALID_ORDER_ID = str(uuid.uuid4)
-VALID_CUSTOMER_ID = str(uuid.uuid4)
-VALID_PRODUCT_ID = str(uuid.uuid4)
+VALID_ORDER_ID = str(uuid.uuid4())
+VALID_CUSTOMER_ID = str(uuid.uuid4())
+VALID_PRODUCT_ID = str(uuid.uuid4())
 
 
 def full_order_dict(order_id=None, customer_id=None, status="PENDING"):
     return {
-        "id": str(order_id) if order_id else str(uuid.uuid4),
+        "id": str(order_id) if order_id else str(uuid.uuid4()),
         "created_at": datetime.now(timezone.utc),
         "updated_at": None,
-        "customer_id": str(customer_id) if customer_id else str(uuid.uuid4),
+        "customer_id": str(customer_id) if customer_id else str(uuid.uuid4()),
         "total_amount": Decimal("100.00"),
         "status": status,
         "items": [
@@ -110,7 +110,7 @@ async def test_GetById_ShouldReturnNotFound_WhenRecordDoesNotExist(client_with_m
     # Arrange
     client, mock_service = client_with_mocked_order_service
     mock_service.GetByIdAsync.return_value = None
-    random_id = str(uuid.uuid4)
+    random_id = str(uuid.uuid4())
 
     # Act
     response = await client.get(f"/api/orders/{random_id}")
@@ -177,7 +177,7 @@ async def test_Delete_ShouldReturnNotFound_WhenRecordDoesNotExist(client_with_mo
     # Arrange
     client, mock_service = client_with_mocked_order_service
     mock_service.DeleteAsync.return_value = False
-    random_id = str(uuid.uuid4)
+    random_id = str(uuid.uuid4())
 
     # Act
     response = await client.delete(f"/api/orders/{random_id}")

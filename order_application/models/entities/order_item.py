@@ -9,8 +9,10 @@ class OrderItem(Base):
     __tablename__ = "order_items"
 
     id: Mapped[str] = mapped_column(
-        String(36), primary_key=True)
-  
+        String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
 
     order_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("orders.id"), nullable=False

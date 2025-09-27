@@ -2,9 +2,9 @@
 import uuid
 from unittest.mock import ANY
 
-VALID_ADDRESS_ID = str(uuid.uuid4)
-ANOTHER_ADDRESS_ID = str(uuid.uuid4)
-NON_EXISTENT_ADDRESS_ID = str(uuid.uuid4)
+VALID_ADDRESS_ID = str(uuid.uuid4())
+ANOTHER_ADDRESS_ID = str(uuid.uuid4())
+NON_EXISTENT_ADDRESS_ID = str(uuid.uuid4())
 
 
 # region Create Method.
@@ -14,7 +14,7 @@ async def test_Create_ShouldReturnCreatedAtAction_WhenRecordIsCreated(client_wit
     # Arrange
     client, mock_service = client_with_mocked_address_service
     dto = {
-        "customer_id": str(uuid.uuid4),
+        "customer_id": str(uuid.uuid4()),
         "street": "123 Main St",
         "city": "New York",
         "state": "NY",

@@ -21,7 +21,7 @@ class AddressService(AddressServiceInterface):
             dto = AddressCreateDTO(**dto)
 
         entity = Address(
-            id=str(uuid.uuid4),
+            id=str(uuid.uuid4()),
             customer_id=dto.customer_id,
             street=dto.street,
             city=dto.city,

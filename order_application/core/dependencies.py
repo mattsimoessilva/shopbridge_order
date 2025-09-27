@@ -1,64 +1,33 @@
-﻿from fastapi import Depends
+﻿from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import async_session_factory
-import config
-from repositories import OrderRepository
-from repositories import AddressRepository
-from services import OrderService
-from services import AddressService
-from clients import ProductServiceClient
-from clients import LogisticsServiceClient
-
+from repositories import OrderRepository, AddressRepository
+from services import OrderService, AddressService
+from clients import ProductServiceClient, LogisticsServiceClient
 
 # --- Database Session Dependency ---
 async def get_database() -> AsyncSession:
     async with async_session_factory() as session:
         yield session
 
-
 # --- Repository Dependencies ---
-def get_order_repository() -> OrderRepository:
-    return OrderRepository(session_factory=None)
+def get_order_repository(request: Request) -> OrderRepository:
+    return request.app.state.order_repository
 
-
-def get_address_repository() -> AddressRepository:
-    return AddressRepository(session_factory=None)
-
+def get_address_repository(request: Request) -> AddressRepository:
+    return request.app.state.address_repository
 
 # --- Client Dependencies ---
-def get_product_client() -> ProductServiceClient:
-    return ProductServiceClient(base_url=config.PRODUCT_SERVICE_URL)  
+def get_product_client(request: Request) -> ProductServiceClient:
+    return request.app.state.product_client
 
-
-def get_logistics_client() -> LogisticsServiceClient:
-    return LogisticsServiceClient(base_url=config.LOGISTICS_SERVICE_URL)  
-
+def get_logistics_client(request: Request) -> LogisticsServiceClient:
+    return request.app.state.logistics_client
 
 # --- Service Dependencies ---
-async def get_order_service(
-    db: AsyncSession = Depends(get_database),
-    repo: OrderRepository = Depends(get_order_repository),
-    addr_repo: AddressRepository = Depends(get_address_repository),
-    product_client: ProductServiceClient = Depends(get_product_client),
-    logistics_client: LogisticsServiceClient = Depends(get_logistics_client),
-) -> OrderService:
+def get_order_service(request: Request) -> OrderService:
+    return request.app.state.order_service
 
-    service = OrderService(
-        repository=repo,
-        address_repository=addr_repo,
-        product_client=product_client,
-        logistics_client=logistics_client
-    )
-
-    return service
-
-
-async def get_address_service(
-    db: AsyncSession = Depends(get_database),
-    repo: AddressRepository = Depends(get_address_repository),
-) -> AddressService:
-
-    service = AddressService(repository=repo)
-
-    return service
+def get_address_service(request: Request) -> AddressService:
+    return request.app.state.address_service

@@ -10,7 +10,10 @@ class Address(Base):
     __tablename__ = "addresses"
 
     id: Mapped[str] = mapped_column(
-        String(36), primary_key=True)
+        String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
+    )
 
     customer_id: Mapped[str] = mapped_column(String(36), nullable=False)
     street: Mapped[str] = mapped_column(String(100), nullable=False)

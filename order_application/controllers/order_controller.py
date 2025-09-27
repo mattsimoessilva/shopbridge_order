@@ -25,11 +25,12 @@ async def create_order(
 ):
     try:
         return await service.CreateAsync(data, session=session)
-    except ValueError as ex:
-        raise HTTPException(status_code=400, detail=str(ex))
-    except Exception as ex:
-        raise HTTPException(status_code=500, detail=str(ex))
-
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @order_router.get("/", response_model=list[OrderReadSchema])
 async def get_all_orders(
@@ -38,8 +39,12 @@ async def get_all_orders(
 ):
     try:
         return await service.GetAllAsync(session=session)
-    except Exception as ex:
-        raise HTTPException(status_code=500, detail=str(ex))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @order_router.get("/{id}", response_model=OrderReadSchema)
@@ -53,8 +58,13 @@ async def get_order_by_id(
         if dto is None:
             raise HTTPException(status_code=404, detail="Record not found")
         return dto
-    except Exception as ex:
-        raise HTTPException(status_code=500, detail=str(ex))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 
 
 @order_router.put("/{id}", status_code=status.HTTP_200_OK)
@@ -69,10 +79,13 @@ async def update_order(
         if not success:
             raise HTTPException(status_code=404, detail="Record not found")
         return {"message": "Updated successfully"}
-    except ValueError as ex:
-        raise HTTPException(status_code=400, detail=str(ex))
-    except Exception as ex:
-        raise HTTPException(status_code=500, detail=str(ex))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 
 
 @order_router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -85,8 +98,13 @@ async def delete_order(
         deleted = await service.DeleteAsync(id, session=session)
         if not deleted:
             raise HTTPException(status_code=404, detail="Record not found")
-    except Exception as ex:
-        raise HTTPException(status_code=500, detail=str(ex))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 
 
 @order_router.patch("/{id}/status", response_model=OrderReadSchema)
@@ -101,7 +119,10 @@ async def patch_order_status(
         if not updated:
             raise HTTPException(status_code=404, detail="Record not found")
         return await service.GetByIdAsync(id, session=session)
-    except ValueError as ex:
-        raise HTTPException(status_code=400, detail=str(ex))
-    except Exception as ex:
-        raise HTTPException(status_code=500, detail=str(ex))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error")
+

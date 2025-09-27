@@ -33,7 +33,7 @@ async def test_CreateAsync_ShouldReturnDTO_WhenDTOIsValid(service_with_mocks):
     service, repo_mock = service_with_mocks
 
     dto = AddressCreateDTO(
-        customer_id=str(uuid.uuid4),
+        customer_id=str(uuid.uuid4()),
         street="123 Main St",
         city="NY",
         state="NY",
@@ -57,7 +57,7 @@ async def test_CreateAsync_ShouldRaiseException_WhenRepositoryFails(service_with
     service, repo_mock = service_with_mocks
 
     dto = AddressCreateDTO(
-        customer_id=str(uuid.uuid4),
+        customer_id=str(uuid.uuid4()),
         street="123 Main St",
         city="NY",
         state="NY",
@@ -93,9 +93,9 @@ async def test_GetAllAsync_ShouldReturnMappedDTOs_WhenRecordsExist(service_with_
     service, repo_mock = service_with_mocks
 
     addr1 = Address(
-        id=str(uuid.uuid4),
+        id=str(uuid.uuid4()),
         street="123 Main St",
-        customer_id=str(uuid.uuid4),
+        customer_id=str(uuid.uuid4()),
         city="NY",
         state="NY",
         postal_code="10001",
@@ -103,8 +103,8 @@ async def test_GetAllAsync_ShouldReturnMappedDTOs_WhenRecordsExist(service_with_
         created_at=datetime.now(timezone.utc)
     )
     addr2 = Address(
-        id=str(uuid.uuid4),
-        customer_id=str(uuid.uuid4),
+        id=str(uuid.uuid4()),
+        customer_id=str(uuid.uuid4()),
         street="456 Elm St",
         city="Boston",
         state="MA",
@@ -148,10 +148,10 @@ async def test_GetByIdAsync_ShouldRaiseValueError_WhenIdIsEmpty(service_with_moc
 async def test_GetByIdAsync_ShouldReturnMappedDTO_WhenRecordExists(service_with_mocks):
     service, repo_mock = service_with_mocks
 
-    address_id = str(uuid.uuid4)
+    address_id = str(uuid.uuid4())
     entity = Address(
         id=address_id,
-        customer_id=str(uuid.uuid4),
+        customer_id=str(uuid.uuid4()),
         street="123 Main St",
         city="NY",
         state="NY",
@@ -172,7 +172,7 @@ async def test_GetByIdAsync_ShouldReturnMappedDTO_WhenRecordExists(service_with_
 async def test_GetByIdAsync_ShouldReturnNone_WhenRecordDoesNotExist(service_with_mocks):
     service, repo_mock = service_with_mocks
 
-    address_id = str(uuid.uuid4)
+    address_id = str(uuid.uuid4())
     repo_mock.GetByIdAsync.return_value = None
 
     result = await service.GetByIdAsync(address_id, session="session")
@@ -188,7 +188,7 @@ async def test_GetByIdAsync_ShouldRaiseException_WhenRepositoryFails(service_wit
     repo_mock.GetByIdAsync.side_effect = Exception("Repository failure")
 
     with pytest.raises(Exception):
-        await service.GetByIdAsync(str(uuid.uuid4), session="session")
+        await service.GetByIdAsync(str(uuid.uuid4()), session="session")
 
 # endregion
 
@@ -211,7 +211,7 @@ async def test_UpdateAsync_ShouldReturnFalse_WhenRecordDoesNotExist(service_with
     service, repo_mock = service_with_mocks
 
     dto = AddressUpdateDTO(
-        id=str(uuid.uuid4),
+        id=str(uuid.uuid4()),
         street="123 Main St",
         city="NY",
         state="NY",
@@ -231,7 +231,7 @@ async def test_UpdateAsync_ShouldReturnTrue_WhenUpdateIsSuccessful(service_with_
     service, repo_mock = service_with_mocks
 
     dto = AddressUpdateDTO(
-        id=str(uuid.uuid4),
+        id=str(uuid.uuid4()),
         street="123 Main St",
         city="NY",
         state="NY",
@@ -254,7 +254,7 @@ async def test_UpdateAsync_ShouldRaiseException_WhenRepositoryFails(service_with
     service, repo_mock = service_with_mocks
 
     dto = AddressUpdateDTO(
-        id=str(uuid.uuid4),
+        id=str(uuid.uuid4()),
         street="123 Main St",
         city="NY",
         state="NY",
@@ -283,7 +283,7 @@ async def test_DeleteAsync_ShouldRaiseValueError_WhenIdIsEmpty(service_with_mock
 async def test_DeleteAsync_ShouldReturnTrue_WhenRecordIsDeleted(service_with_mocks):
     service, repo_mock = service_with_mocks
 
-    address_id = str(uuid.uuid4)
+    address_id = str(uuid.uuid4())
     repo_mock.DeleteAsync.return_value = True
 
     result = await service.DeleteAsync(address_id, session="session")
@@ -296,7 +296,7 @@ async def test_DeleteAsync_ShouldReturnTrue_WhenRecordIsDeleted(service_with_moc
 async def test_DeleteAsync_ShouldReturnFalse_WhenRecordDoesNotExist(service_with_mocks):
     service, repo_mock = service_with_mocks
 
-    address_id = str(uuid.uuid4)
+    address_id = str(uuid.uuid4())
     repo_mock.DeleteAsync.return_value = False
 
     result = await service.DeleteAsync(address_id, session="session")
@@ -312,6 +312,6 @@ async def test_DeleteAsync_ShouldRaiseException_WhenRepositoryFails(service_with
     repo_mock.DeleteAsync.side_effect = Exception("Repository failure")
 
     with pytest.raises(Exception):
-        await service.DeleteAsync(str(uuid.uuid4), session="session")
+        await service.DeleteAsync(str(uuid.uuid4()), session="session")
 
 # endregion

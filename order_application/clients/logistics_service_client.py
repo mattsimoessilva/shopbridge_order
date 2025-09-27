@@ -5,10 +5,7 @@ from typing import Any, Dict, Optional
 class LogisticsServiceClient:
     def __init__(self, base_url: str):
         self._base_url = base_url.rstrip("/")
-        self._session: Optional[aiohttp.ClientSession] = None
-
-    async def open(self) -> "LogisticsServiceClient":
-        return await self.__aenter__()
+        self._session: None
 
     async def __aenter__(self) -> "LogisticsServiceClient":
         self._session = aiohttp.ClientSession()
@@ -55,7 +52,7 @@ class LogisticsServiceClient:
             "country": country,
         }
 
-        async with session.post(url, json=payload, timeout=aiohttp.ClientTimeout(total=5)) as resp:
+        async with session.post(url, json=payload, timeout=aiohttp.ClientTimeout(total=10)) as resp:
             text_body = await resp.text()
             if resp.status != 201:
                 raise RuntimeError(f"Error creating shipment: {resp.status} - {text_body}")
@@ -66,7 +63,7 @@ class LogisticsServiceClient:
     async def get_shipment(self, shipment_id: str) -> Dict[str, Any]:
         session = await self._get_session()
         url = f"{self._base_url}/shipments/{shipment_id}"
-        async with session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as resp:
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
             text_body = await resp.text()
             if resp.status == 404:
                 raise ValueError(f"Shipment {shipment_id} not found.")
@@ -78,7 +75,7 @@ class LogisticsServiceClient:
         session = await self._get_session()
         url = f"{self._base_url}/shipments/{shipment_id}/status"
         payload = {"status": status}
-        async with session.patch(url, json=payload, timeout=aiohttp.ClientTimeout(total=5)) as resp:
+        async with session.patch(url, json=payload, timeout=aiohttp.ClientTimeout(total=10)) as resp:
             text_body = await resp.text()
             if resp.status == 404:
                 raise ValueError(f"Shipment {shipment_id} not found.")
@@ -102,7 +99,7 @@ class LogisticsServiceClient:
             "postalCode": postalCode,
             "country": country,
         }
-        async with session.post(url, json=payload, timeout=aiohttp.ClientTimeout(total=5)) as resp:
+        async with session.post(url, json=payload, timeout=aiohttp.ClientTimeout(total=10)) as resp:
             text_body = await resp.text()
             if resp.status == 400:
                 raise ValueError(f"Bad request: {text_body}")
