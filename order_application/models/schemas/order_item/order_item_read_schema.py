@@ -3,6 +3,7 @@ from typing import Optional
 
 
 class OrderItemReadSchema(BaseModel):
+    id: str = Field(..., description="Unique identifier of the order item")
     product_id: str = Field(..., description="Product's unique identifier")
     product_variant_id: Optional[str] = Field(None, description="Product Variant's unique identifier")
     quantity: int = Field(..., description="Quantity of the product ordered")

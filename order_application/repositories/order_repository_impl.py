@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from models.entities import Order
 from repositories.interfaces import OrderRepositoryInterface
-
+from datetime import datetime, timezone
 
 class OrderRepository(OrderRepositoryInterface):
 
@@ -32,16 +32,22 @@ class OrderRepository(OrderRepositoryInterface):
         )
         return result.scalars().first()
 
-    async def UpdateAsync(self, updated: Order, session: AsyncSession) -> bool:
+    async def UpdateAsync(self, updated: Order, session: AsyncSession) -> Order | None:
         if updated is None:
             raise ValueError("Record data cannot be null.")
 
         existing = await self.GetByIdAsync(updated.id, session=session)
         if existing is None:
-            return False
+            return None
+
+        existing.shipment_id = updated.shipment_id
+        existing.items = updated.items
+
+        existing.updated_at = datetime.utcnow()
 
         await session.commit()
-        return True
+        await session.refresh(existing)
+        return existing
 
     async def DeleteAsync(self, id: str, session: AsyncSession) -> bool:
         if not id:

@@ -144,7 +144,7 @@ class OrderService(OrderServiceInterface):
             ]
         )
 
-    async def UpdateAsync(self, id: str, dto: OrderUpdateDTO, session) -> bool:
+    async def UpdateAsync(self, id: str, dto: OrderUpdateDTO, session) -> OrderReadDTO:
         if isinstance(dto, dict):
             dto = OrderUpdateDTO(**dto)
 
@@ -153,21 +153,55 @@ class OrderService(OrderServiceInterface):
 
         existing = await self._repository.GetByIdAsync(id, session=session)
         if existing is None:
-            return False
+            return None
 
         if existing.status in [OrderStatus.PROCESSING, OrderStatus.IN_TRANSIT]:
-            raise ValueError("Record can no longer be updated once processing or in transit.")
+            raise ValueError("Order can no longer be updated once it is processing or in transit.")
 
-        existing.customer_id = dto.customer_id
-        existing.status = dto.status
-        existing.items = dto.items
-        existing.shipment_id = dto.shipment_id
-        existing.total_amount = dto.total_amount
+        if existing.status in [OrderStatus.COMPLETED, OrderStatus.CANCELLED]:
+            raise ValueError("Order cannot be modified once completed or cancelLed.")
+
+        if dto.items is not None:
+            for dto_item in dto.items:
+                if dto_item.quantity <= 0:
+                    raise ValueError(f"Quantity for item {dto_item.id} must be greater than zero")
+
+                # Find existing order item
+                entity_item = next((i for i in existing.items if i.id == dto_item.id), None)
+                if entity_item is None:
+                    raise ValueError(f"Order item {dto_item.id} not found in the existing order.")
+
+                # Compute quantity delta
+                delta_quantity = dto_item.quantity - entity_item.quantity
+                entity_item.quantity = dto_item.quantity
+
+                if entity_item.product_variant_id:
+                    product_data = await self._product_client.get_variant(entity_item.product_variant_id)
+                    if not product_data:
+                        raise RuntimeError(f"Product Variant {entity_item.product_variant_id} not found.")
+                    entity_item.unit_price = Decimal(product_data["price"])
+
+                    if delta_quantity > 0:
+                        await self._product_client.reserve_variant_stock(entity_item.product_variant_id, delta_quantity)
+                    elif delta_quantity < 0:
+                        await self._product_client.release_variant_stock(entity_item.product_variant_id, -delta_quantity)
+
+                else:
+                    product_data = await self._product_client.get_product(entity_item.product_id)
+                    if not product_data:
+                        raise RuntimeError(f"Product {entity_item.product_id} not found.")
+                    entity_item.unit_price = Decimal(product_data["price"])
+
+                    if delta_quantity > 0:
+                        await self._product_client.reserve_product_stock(entity_item.product_id, delta_quantity)
+                    elif delta_quantity < 0:
+                        await self._product_client.release_product_stock(entity_item.product_id, -delta_quantity)
+
 
         existing.updated_at = datetime.now(timezone.utc)
 
         await self._repository.UpdateAsync(existing, session=session)
-        return True
+        return existing
 
 
     async def DeleteAsync(self, id: str, session) -> bool:

@@ -78,15 +78,17 @@ async def update_order(
     service: OrderService = Depends(get_order_service),
 ):
     try:
-        success = await service.UpdateAsync(id, data, session=session)
-        if not success:
+        entity = await service.UpdateAsync(id, data, session=session)
+        if not entity:
             raise HTTPException(status_code=404, detail="Record not found")
+        return entity
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=502, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
